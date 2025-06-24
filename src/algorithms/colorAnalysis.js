@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const colorQuantize = require('color-quantize');
+const quantize = require('quantize');
 const { Stats } = require('fast-stats');
 
 class ColorAnalyzer {
@@ -68,7 +68,8 @@ class ColorAnalyzer {
     }
 
     // Quantize colors to reduce palette size
-    const quantizedColors = colorQuantize(pixels, this.options.maxColors);
+    const cmap = quantize(pixels, this.options.maxColors);
+    const quantizedColors = cmap ? cmap.palette() : [];
 
     // Count occurrences of each color
     const colorCounts = this.countColors(pixelData, info, quantizedColors);
@@ -500,14 +501,15 @@ class ColorAnalyzer {
    * Calculate color diversity score
    */
   calculateColorDiversity(rStats, gStats, bStats) {
-    const rVariance = rStats.variance();
-    const gVariance = gStats.variance();
-    const bVariance = bStats.variance();
+    // Use standard deviation instead of variance, which is more readily available
+    const rStd = rStats.stddev();
+    const gStd = gStats.stddev();
+    const bStd = bStats.stddev();
 
-    const avgVariance = (rVariance + gVariance + bVariance) / 3;
-    const maxVariance = 255 * 255; // Maximum possible variance
+    const avgStd = (rStd + gStd + bStd) / 3;
+    const maxStd = 255; // Maximum possible standard deviation
 
-    return avgVariance / maxVariance; // Normalized 0-1
+    return avgStd / maxStd; // Normalized 0-1
   }
 
   /**

@@ -278,39 +278,49 @@ class ImageToText {
   }
 
   /**
-   * Classify UI components using rule-based analysis
+   * Classify UI components using advanced rule-based analysis v2.0.5
    */
   async classifyComponents(analysisResult) {
-    const components = [];
     const visualElements = analysisResult.vision_analysis?.visual_elements || [];
     const textElements = analysisResult.text_extraction?.structured_text || [];
+    const imageMetadata = {
+      width: analysisResult.vision_analysis?.image_metadata?.width || 1000,
+      height: analysisResult.vision_analysis?.image_metadata?.height || 800,
+      quality_score: analysisResult.vision_analysis?.quality_score || 0.7,
+      complexity_score: analysisResult.vision_analysis?.complexity_score || 0.5,
+      sharpness: analysisResult.vision_analysis?.sharpness || 0.6
+    };
 
-    // Combine visual and text elements for classification
-    for (const visualElement of visualElements) {
-      // Find overlapping text
-      const overlappingText = this.findOverlappingText(visualElement.position, textElements);
+    // Add text content to visual elements
+    const enrichedElements = visualElements.map(visualElement => ({
+      ...visualElement,
+      text_content: this.findOverlappingText(visualElement.position, textElements)
+    }));
 
-      // Classify component
-      const classification = await this.componentClassifier.classify(
-        visualElement,
-        overlappingText,
-        analysisResult
-      );
+    // Use advanced component classifier
+    const classifiedComponents = this.componentClassifier.classify(enrichedElements, imageMetadata);
 
-      components.push({
-        id: `component_${components.length}`,
-        type: classification.type,
-        confidence: classification.confidence,
-        position: visualElement.position,
-        visual_properties: {
-          shape: visualElement.type,
-          area: visualElement.area,
-          aspect_ratio: visualElement.aspect_ratio
-        },
-        text_content: overlappingText,
-        classification_reasoning: classification.reasoning
-      });
-    }
+    // Transform to expected format with enhanced data
+    const components = classifiedComponents.map((element, index) => ({
+      id: `component_${index}`,
+      type: element.classification?.type || 'component',
+      confidence: element.final_confidence || element.classification?.confidence || 0.5,
+      position: element.position,
+      visual_properties: {
+        shape: element.type,
+        area: element.area,
+        aspect_ratio: element.aspect_ratio
+      },
+      text_content: element.text_content || '',
+      classification_reasoning: element.classification?.detection_method || 'advanced_classification_v2.0.5',
+      enhancement_data: {
+        context_boost: element.classification?.context_boost || 0,
+        quality_boost: element.classification?.quality_boost || 0,
+        ensemble_score: element.ensemble_score || 0,
+        position_boost: element.position_boost || 0,
+        classification_version: '2.0.5'
+      }
+    }));
 
     return components.sort((a, b) => b.confidence - a.confidence);
   }

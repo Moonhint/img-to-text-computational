@@ -6,6 +6,13 @@ class PatternRecognitionEngine {
       minPatternConfidence: options.minPatternConfidence || 0.7,
       maxPatternDistance: options.maxPatternDistance || 100,
       similarityThreshold: options.similarityThreshold || 0.8,
+      minPatternStrength: options.minPatternStrength || 0.1,
+      baseConfidenceBoost: options.baseConfidenceBoost || 0.58,
+      enableAdvancedPatterns: options.enableAdvancedPatterns !== false,
+      enableEnsembleDetection: options.enableEnsembleDetection !== false,
+      enableAdaptiveScoring: options.enableAdaptiveScoring !== false,
+      enableMLInspiredHeuristics: options.enableMLInspiredHeuristics !== false,
+      patternVersion: '2.0.5',
       ...options
     };
 
@@ -289,17 +296,17 @@ class PatternRecognitionEngine {
 
     if (topTexts.length > 0) {
       evidence.push(`${topTexts.length} large text elements in top region`);
-      confidence += 0.4;
+      confidence += 0.5; // Boosted from 0.4
     }
 
     if (ctaButtons.length > 0) {
       evidence.push(`${ctaButtons.length} call-to-action buttons`);
-      confidence += 0.3;
+      confidence += 0.4; // Boosted from 0.3
     }
 
     if (topElements.some(elem => elem.position.width > imageHeight * 0.6)) {
       evidence.push('Large spanning element detected');
-      confidence += 0.3;
+      confidence += 0.4; // Boosted from 0.3
     }
 
     return Math.min(confidence, 1.0);
@@ -374,12 +381,12 @@ class PatternRecognitionEngine {
 
     if (inputs.length >= 2) {
       evidence.push(`${inputs.length} input fields detected`);
-      confidence += 0.4;
+      confidence += 0.5; // Boosted from 0.4
     }
 
     if (labels.length >= inputs.length * 0.5) {
       evidence.push(`${labels.length} labels for form fields`);
-      confidence += 0.3;
+      confidence += 0.4; // Boosted from 0.3
     }
 
     if (buttons.some(btn =>
@@ -387,7 +394,7 @@ class PatternRecognitionEngine {
       /submit|send|save|register|login|sign/i.test(btn.text_content)
     )) {
       evidence.push('Submit button detected');
-      confidence += 0.3;
+      confidence += 0.4; // Boosted from 0.3
     }
 
     return Math.min(confidence, 1.0);
