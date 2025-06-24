@@ -40,7 +40,7 @@ program
   .option('--lang <language>', 'OCR language (default: eng)', 'eng')
   .action(async (input, options) => {
     const spinner = ora('Initializing computational analysis...').start();
-    
+
     try {
       // Validate input file
       if (!await fs.pathExists(input)) {
@@ -112,7 +112,7 @@ program
   .option('--lang <language>', 'OCR language (default: eng)', 'eng')
   .action(async (options) => {
     const spinner = ora('Initializing batch processing...').start();
-    
+
     try {
       if (!options.inputDir) {
         throw new Error('Input directory is required. Use -i or --input-dir');
@@ -202,10 +202,10 @@ program
   .option('--include-image', 'Include original image as background (SVG only)')
   .action(async (input, options) => {
     const spinner = ora('Preparing export...').start();
-    
+
     try {
       let analysisResult;
-      
+
       // Check if input is JSON analysis file or image file
       if (input.endsWith('.json')) {
         // Load existing analysis
@@ -220,7 +220,7 @@ program
           enableDesignSystemAnalysis: true,
           verbose: program.opts().verbose
         });
-        
+
         analysisResult = await analyzer.analyze(input);
       }
 
@@ -228,7 +228,7 @@ program
 
       // Initialize analyzer for export
       const analyzer = new ImageToText();
-      
+
       // Export options
       const exportOptions = {
         showBoundingBoxes: options.showBoxes,
@@ -238,7 +238,7 @@ program
       };
 
       let exportResult;
-      
+
       // Export based on format
       switch (options.format.toLowerCase()) {
         case 'svg':
@@ -256,7 +256,7 @@ program
       await fs.writeFile(outputPath, exportResult);
 
       spinner.succeed(`Export completed: ${outputPath}`);
-      
+
       if (!program.opts().quiet) {
         console.log(chalk.green(`✓ Exported ${options.format.toUpperCase()} to: ${outputPath}`));
         console.log(chalk.gray(`File size: ${(exportResult.length / 1024).toFixed(1)} KB`));
@@ -282,7 +282,7 @@ program
   .option('--clear-cache', 'Clear cache before processing')
   .action(async (input, options) => {
     const spinner = ora('Initializing performance optimization...').start();
-    
+
     try {
       // Initialize analyzer with performance optimization
       const analyzer = new ImageToText({
@@ -305,13 +305,13 @@ program
       spinner.text = 'Starting optimized processing...';
 
       let results;
-      
+
       if (await fs.pathExists(input) && (await fs.stat(input)).isDirectory()) {
         // Batch processing
         const glob = require('glob');
         const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'];
         let imagePaths = [];
-        
+
         for (const ext of imageExtensions) {
           const pattern = path.join(input, `**/*.${ext}`);
           const files = glob.sync(pattern, { nocase: true });
@@ -333,7 +333,7 @@ program
         }, progressCallback);
 
         spinner.succeed(`Batch processing completed: ${results.batch_stats.successful}/${results.batch_stats.total_images} successful`);
-        
+
         // Display performance statistics
         const perfStats = analyzer.getPerformanceStats();
         if (perfStats && !program.opts().quiet) {
@@ -348,7 +348,7 @@ program
       } else {
         // Single file processing
         results = await analyzer.analyzeWithOptimization(input);
-        
+
         if (options.outputDir) {
           const fileName = path.basename(input, path.extname(input));
           const outputPath = path.join(options.outputDir, `${fileName}.${options.format}`);
@@ -378,34 +378,34 @@ program
   .option('--quick', 'Run quick test only')
   .action(async (options) => {
     const spinner = ora('Running system tests...').start();
-    
+
     try {
       // Test basic functionality
       spinner.text = 'Testing core components...';
-      
+
       const ImageProcessor = require('../src/core/imageProcessor');
       const OCREngine = require('../src/core/ocrEngine');
       const VisionAnalyzer = require('../src/core/visionAnalyzer');
       const ColorAnalyzer = require('../src/algorithms/colorAnalysis');
-      
+
       // Test component initialization
       const imageProcessor = new ImageProcessor();
       const ocrEngine = new OCREngine();
       const visionAnalyzer = new VisionAnalyzer();
       const colorAnalyzer = new ColorAnalyzer();
-      
+
       spinner.text = 'Testing image processing...';
       // Additional tests would go here
-      
+
       spinner.succeed('All tests passed!');
-      
+
       console.log(chalk.green('✓ Core components initialized successfully'));
       console.log(chalk.green('✓ Image processing ready'));
       console.log(chalk.green('✓ OCR engine ready'));
       console.log(chalk.green('✓ Computer vision ready'));
       console.log(chalk.green('✓ Color analysis ready'));
       console.log(chalk.green('✓ System ready for analysis'));
-      
+
     } catch (error) {
       spinner.fail('Tests failed');
       console.error(chalk.red('Error:'), error.message);
@@ -428,7 +428,7 @@ program
       console.log('• Processing: Computational only');
       console.log('• Dependencies: None (offline)');
     }
-    
+
     if (options.reset) {
       console.log(chalk.green('Configuration reset to defaults'));
     }
@@ -439,7 +439,7 @@ function displayResults(result, format) {
   console.log('');
   console.log(chalk.blue('Analysis Results:'));
   console.log('');
-  
+
   switch (format) {
     case 'json':
       console.log(JSON.stringify(result, null, 2));
@@ -457,19 +457,19 @@ function displayResults(result, format) {
 }
 
 function displayMarkdownResults(result) {
-  console.log(`# Image Analysis Results`);
+  console.log('# Image Analysis Results');
   console.log('');
   console.log(`**File:** ${result.image_metadata.file_name}`);
   console.log(`**Dimensions:** ${result.image_metadata.dimensions}`);
   console.log(`**Format:** ${result.image_metadata.format}`);
   console.log('');
-  
+
   if (result.text_extraction) {
     console.log('## Text Content');
     console.log(result.text_extraction.raw_text || 'No text detected');
     console.log('');
   }
-  
+
   if (result.components && result.components.length > 0) {
     console.log('## Detected Components');
     result.components.forEach((component, index) => {
@@ -480,7 +480,7 @@ function displayMarkdownResults(result) {
     });
     console.log('');
   }
-  
+
   if (result.color_analysis) {
     console.log('## Color Analysis');
     console.log(`**Dominant Colors:** ${result.color_analysis.dominant_colors.primary.hex}`);
@@ -492,7 +492,7 @@ function displayMarkdownResults(result) {
 function displaySummary(result) {
   console.log('');
   console.log(chalk.blue('Summary:'));
-  
+
   const stats = result.analysis_statistics;
   if (stats) {
     console.log(chalk.gray(`• Components detected: ${stats.components_detected}`));
@@ -501,7 +501,7 @@ function displaySummary(result) {
     console.log(chalk.gray(`• Colors extracted: ${stats.colors_extracted}`));
     console.log(chalk.gray(`• Processing time: ${stats.processing_time}ms`));
   }
-  
+
   if (result.computed_recommendations) {
     const recs = result.computed_recommendations;
     if (recs.framework_suggestions.length > 0) {
@@ -513,19 +513,19 @@ function displaySummary(result) {
 function displayBatchSummary(results) {
   console.log('');
   console.log(chalk.blue('Batch Processing Summary:'));
-  
+
   const successful = results.filter(r => r.status === 'success').length;
   const failed = results.length - successful;
   const totalTime = results
     .filter(r => r.processing_time)
     .reduce((total, r) => total + r.processing_time, 0);
-  
+
   console.log(chalk.green(`✓ Successfully processed: ${successful} files`));
   if (failed > 0) {
     console.log(chalk.red(`✗ Failed: ${failed} files`));
   }
   console.log(chalk.gray(`Total processing time: ${totalTime}ms`));
-  
+
   // Show failed files
   const failedFiles = results.filter(r => r.status === 'error');
   if (failedFiles.length > 0) {
@@ -548,4 +548,4 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-program.parse(); 
+program.parse();

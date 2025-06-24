@@ -37,7 +37,7 @@ class PatternRecognitionEngine {
           textPattern: /.*[>\/\\].*|.*›.*/
         }
       },
-      
+
       // Layout patterns
       hero_section: {
         description: 'Hero section with large content',
@@ -64,7 +64,7 @@ class PatternRecognitionEngine {
           alignment: 'top'
         }
       },
-      
+
       // Component patterns
       card_grid: {
         description: 'Grid of cards',
@@ -92,7 +92,7 @@ class PatternRecognitionEngine {
           gridLayout: true
         }
       },
-      
+
       // Content patterns
       article: {
         description: 'Article/blog post layout',
@@ -196,8 +196,8 @@ class PatternRecognitionEngine {
     return {
       pattern: patternName,
       description: template.description,
-      confidence: confidence,
-      evidence: evidence,
+      confidence,
+      evidence,
       characteristics: this.extractPatternCharacteristics(patternName, analysisResult)
     };
   }
@@ -207,27 +207,27 @@ class PatternRecognitionEngine {
    */
   detectHorizontalNav(components, layoutAnalysis, evidence) {
     const navComponents = components.filter(c => c.type === 'navigation' || c.type === 'button');
-    
+
     if (navComponents.length < 3) return 0;
 
     // Check if components are horizontally aligned
     const horizontalGroups = layoutAnalysis.alignment_analysis?.horizontal_groups || [];
-    const navGroup = horizontalGroups.find(group => 
+    const navGroup = horizontalGroups.find(group =>
       group.elements.some(elem => navComponents.find(nav => nav.id === elem.id))
     );
 
     if (navGroup && navGroup.elements.length >= 3) {
       evidence.push(`${navGroup.elements.length} horizontally aligned navigation elements`);
-      
+
       // Check if positioned at top
       const avgY = navGroup.elements.reduce((sum, elem) => sum + elem.position.y, 0) / navGroup.elements.length;
       const imageHeight = layoutAnalysis.layout_statistics?.viewport_dimensions?.height || 1000;
-      
+
       if (avgY < imageHeight * 0.2) {
         evidence.push('Positioned in top region of page');
         return 0.9;
       }
-      
+
       return 0.7;
     }
 
@@ -239,20 +239,20 @@ class PatternRecognitionEngine {
    */
   detectBreadcrumb(textElements, components, evidence) {
     // Look for text with separators
-    const breadcrumbTexts = textElements.filter(text => 
+    const breadcrumbTexts = textElements.filter(text =>
       /.*[>\/\\].*|.*›.*|.*».*/.test(text.text)
     );
 
     if (breadcrumbTexts.length > 0) {
       evidence.push('Found text with breadcrumb separators');
-      
+
       // Check if positioned near top
       const avgY = breadcrumbTexts.reduce((sum, text) => sum + text.position.y, 0) / breadcrumbTexts.length;
       if (avgY < 200) {
         evidence.push('Positioned in header region');
         return 0.8;
       }
-      
+
       return 0.6;
     }
 
@@ -267,21 +267,21 @@ class PatternRecognitionEngine {
     const topRegionHeight = imageHeight * 0.4;
 
     // Find large elements in top region
-    const topElements = components.filter(c => 
+    const topElements = components.filter(c =>
       c.position.y < topRegionHeight && c.position.height > 100
     );
 
     if (topElements.length === 0) return 0;
 
     // Look for large text elements (likely headlines)
-    const topTexts = textElements.filter(text => 
-      text.position.y < topRegionHeight && 
+    const topTexts = textElements.filter(text =>
+      text.position.y < topRegionHeight &&
       text.font_info?.size_category === 'large'
     );
 
     // Look for call-to-action buttons
-    const ctaButtons = components.filter(c => 
-      c.type === 'button' && 
+    const ctaButtons = components.filter(c =>
+      c.type === 'button' &&
       c.position.y < topRegionHeight
     );
 
@@ -310,18 +310,18 @@ class PatternRecognitionEngine {
    */
   detectThreeColumn(layoutAnalysis, components, evidence) {
     const verticalGroups = layoutAnalysis.alignment_analysis?.vertical_groups || [];
-    
+
     if (verticalGroups.length === 3) {
       // Check if groups have similar spacing
       const groupPositions = verticalGroups.map(group => group.x_position).sort((a, b) => a - b);
       const spacing1 = groupPositions[1] - groupPositions[0];
       const spacing2 = groupPositions[2] - groupPositions[1];
-      
+
       if (Math.abs(spacing1 - spacing2) < 50) {
         evidence.push('Three evenly spaced vertical columns detected');
         return 0.9;
       }
-      
+
       evidence.push('Three vertical columns with uneven spacing');
       return 0.7;
     }
@@ -334,7 +334,7 @@ class PatternRecognitionEngine {
    */
   detectCardGrid(components, layoutAnalysis, evidence) {
     const cards = components.filter(c => c.type === 'card' || c.type === 'rectangle');
-    
+
     if (cards.length < 4) return 0;
 
     // Check for uniform sizing
@@ -345,13 +345,13 @@ class PatternRecognitionEngine {
 
     if (uniformity > 0.7) {
       evidence.push(`${cards.length} cards with ${Math.round(uniformity * 100)}% size uniformity`);
-      
+
       // Check for grid alignment
       if (layoutAnalysis.grid_analysis?.detected) {
         evidence.push('Grid layout detected');
         return 0.9;
       }
-      
+
       return 0.7;
     }
 
@@ -364,7 +364,7 @@ class PatternRecognitionEngine {
   detectFormLayout(components, textElements, evidence) {
     const inputs = components.filter(c => c.type === 'input');
     const buttons = components.filter(c => c.type === 'button');
-    const labels = textElements.filter(text => 
+    const labels = textElements.filter(text =>
       text.type === 'label' || text.text.endsWith(':')
     );
 
@@ -382,8 +382,8 @@ class PatternRecognitionEngine {
       confidence += 0.3;
     }
 
-    if (buttons.some(btn => 
-      btn.text_content && 
+    if (buttons.some(btn =>
+      btn.text_content &&
       /submit|send|save|register|login|sign/i.test(btn.text_content)
     )) {
       evidence.push('Submit button detected');
@@ -398,7 +398,7 @@ class PatternRecognitionEngine {
    */
   detectGallery(components, evidence) {
     const images = components.filter(c => c.type === 'image' || c.type === 'rectangle');
-    
+
     if (images.length < 4) return 0;
 
     // Check aspect ratios for uniformity
@@ -423,7 +423,7 @@ class PatternRecognitionEngine {
   detectArticle(textElements, components, evidence) {
     const longTexts = textElements.filter(text => text.text.length > 100);
     const headers = textElements.filter(text => text.type === 'header');
-    
+
     if (longTexts.length < 2) return 0;
 
     let confidence = 0;
@@ -453,7 +453,7 @@ class PatternRecognitionEngine {
    */
   detectSidebar(components, layoutAnalysis, evidence) {
     const imageWidth = layoutAnalysis.layout_statistics?.viewport_dimensions?.width || 1000;
-    
+
     // Look for elements in side regions
     const leftElements = components.filter(c => c.position.x < imageWidth * 0.25);
     const rightElements = components.filter(c => c.position.x > imageWidth * 0.75);
@@ -465,9 +465,9 @@ class PatternRecognitionEngine {
       // Check if elements are vertically stacked
       const sortedElements = sideElements.sort((a, b) => a.position.y - b.position.y);
       let verticalStack = true;
-      
+
       for (let i = 1; i < sortedElements.length; i++) {
-        const spacing = sortedElements[i].position.y - (sortedElements[i-1].position.y + sortedElements[i-1].position.height);
+        const spacing = sortedElements[i].position.y - (sortedElements[i - 1].position.y + sortedElements[i - 1].position.height);
         if (spacing < -10 || spacing > 100) {
           verticalStack = false;
           break;
@@ -488,7 +488,7 @@ class PatternRecognitionEngine {
    */
   detectMasonry(components, layoutAnalysis, evidence) {
     const rectangles = components.filter(c => c.type === 'rectangle' || c.type === 'card');
-    
+
     if (rectangles.length < 6) return 0;
 
     // Check for variable heights but similar widths
@@ -549,13 +549,13 @@ class PatternRecognitionEngine {
 
     // Calculate distance
     const distance = this.calculateDistance(comp1.position, comp2.position);
-    
+
     // Check alignment
     const horizontalAlignment = Math.abs(comp1.position.y - comp2.position.y) < 20;
     const verticalAlignment = Math.abs(comp1.position.x - comp2.position.x) < 20;
 
     // Check containment
-    const contained = this.isContained(comp1.position, comp2.position) || 
+    const contained = this.isContained(comp1.position, comp2.position) ||
                      this.isContained(comp2.position, comp1.position);
 
     // Determine relationship type and strength
@@ -627,7 +627,7 @@ class PatternRecognitionEngine {
 
     // Check if top colors dominate the palette
     const dominance = totalUsage / 100;
-    
+
     return {
       score: Math.min(dominance * 1.2, 1.0),
       notes: [
@@ -646,7 +646,7 @@ class PatternRecognitionEngine {
     }
 
     const spacings = [];
-    
+
     // Calculate horizontal spacings
     for (let i = 0; i < components.length; i++) {
       for (let j = i + 1; j < components.length; j++) {
@@ -677,7 +677,7 @@ class PatternRecognitionEngine {
     return {
       score: consistency,
       notes: [
-        `Top spacing values: ${sortedSpacings.map(([spacing]) => spacing + 'px').join(', ')}`,
+        `Top spacing values: ${sortedSpacings.map(([spacing]) => `${spacing  }px`).join(', ')}`,
         `${Math.round(consistency * 100)}% of spacings use consistent values`
       ]
     };
@@ -801,7 +801,7 @@ class PatternRecognitionEngine {
     return {
       score: Math.min(complexity, 1),
       level: this.getComplexityLevel(complexity),
-      factors: factors
+      factors
     };
   }
 
@@ -830,7 +830,7 @@ class PatternRecognitionEngine {
    */
   extractPatternCharacteristics(patternName, analysisResult) {
     const characteristics = {};
-    
+
     switch (patternName) {
       case 'horizontal_nav':
         characteristics.element_count = analysisResult.components?.filter(c => c.type === 'navigation').length || 0;
@@ -890,7 +890,7 @@ class PatternRecognitionEngine {
     if (layoutAnalysis.grid_analysis?.detected) {
       pattern.confidence += 0.4;
       pattern.evidence.push('Regular grid structure detected');
-      
+
       const grid = layoutAnalysis.grid_analysis;
       pattern.properties.rows = grid.rows;
       pattern.properties.columns = grid.columns;
@@ -943,7 +943,7 @@ class PatternRecognitionEngine {
     const verticalGroups = layoutAnalysis.alignment_analysis?.vertical_groups || [];
 
     if (horizontalGroups.length > 0) {
-      const largestHGroup = horizontalGroups.reduce((max, group) => 
+      const largestHGroup = horizontalGroups.reduce((max, group) =>
         group.elements.length > max.elements.length ? group : max
       );
 
@@ -956,7 +956,7 @@ class PatternRecognitionEngine {
         // Check for flex-grow behavior (varying widths)
         const widths = largestHGroup.elements.map(elem => elem.position.width);
         const widthVariance = this.calculateVariance(widths);
-        
+
         if (widthVariance > 0.2) {
           pattern.confidence += 0.2;
           pattern.evidence.push('Variable item widths suggest flex-grow usage');
@@ -966,7 +966,7 @@ class PatternRecognitionEngine {
     }
 
     if (verticalGroups.length > 0) {
-      const largestVGroup = verticalGroups.reduce((max, group) => 
+      const largestVGroup = verticalGroups.reduce((max, group) =>
         group.elements.length > max.elements.length ? group : max
       );
 
@@ -1008,12 +1008,12 @@ class PatternRecognitionEngine {
     // Look for nested grid structures
     if (layoutAnalysis.grid_analysis?.detected) {
       // Find components that might contain subgrids
-      const containerComponents = components.filter(comp => 
+      const containerComponents = components.filter(comp =>
         comp.position.width > 200 && comp.position.height > 150
       );
 
       for (const container of containerComponents) {
-        const nestedComponents = components.filter(comp => 
+        const nestedComponents = components.filter(comp =>
           this.isContained(comp.position, container.position) && comp.id !== container.id
         );
 
@@ -1050,11 +1050,11 @@ class PatternRecognitionEngine {
     const ySpacings = [];
 
     for (let i = 1; i < xPositions.length; i++) {
-      xSpacings.push(xPositions[i] - xPositions[i-1]);
+      xSpacings.push(xPositions[i] - xPositions[i - 1]);
     }
 
     for (let i = 1; i < yPositions.length; i++) {
-      ySpacings.push(yPositions[i] - yPositions[i-1]);
+      ySpacings.push(yPositions[i] - yPositions[i - 1]);
     }
 
     const xRegularity = this.calculateSpacingRegularity(xSpacings);
@@ -1072,7 +1072,7 @@ class PatternRecognitionEngine {
     if (spacings.length === 0) return 0;
 
     const avgSpacing = spacings.reduce((a, b) => a + b, 0) / spacings.length;
-    const variance = spacings.reduce((sum, spacing) => 
+    const variance = spacings.reduce((sum, spacing) =>
       sum + Math.pow(spacing - avgSpacing, 2), 0
     ) / spacings.length;
 
@@ -1085,14 +1085,14 @@ class PatternRecognitionEngine {
     const centerY1 = pos1.y + pos1.height / 2;
     const centerX2 = pos2.x + pos2.width / 2;
     const centerY2 = pos2.y + pos2.height / 2;
-    
+
     return Math.sqrt(Math.pow(centerX2 - centerX1, 2) + Math.pow(centerY2 - centerY1, 2));
   }
 
   isContained(inner, outer) {
-    return inner.x >= outer.x && 
-           inner.y >= outer.y && 
-           inner.x + inner.width <= outer.x + outer.width && 
+    return inner.x >= outer.x &&
+           inner.y >= outer.y &&
+           inner.x + inner.width <= outer.x + outer.width &&
            inner.y + inner.height <= outer.y + outer.height;
   }
 
@@ -1104,4 +1104,4 @@ class PatternRecognitionEngine {
   }
 }
 
-module.exports = PatternRecognitionEngine; 
+module.exports = PatternRecognitionEngine;

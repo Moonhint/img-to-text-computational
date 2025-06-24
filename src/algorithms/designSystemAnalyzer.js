@@ -39,7 +39,7 @@ class DesignSystemAnalyzer {
       colors: {
         common_palettes: [
           'monochromatic',
-          'analogous', 
+          'analogous',
           'complementary',
           'triadic',
           'tetradic',
@@ -73,7 +73,7 @@ class DesignSystemAnalyzer {
 
       // Calculate overall compliance score
       compliance.overall_score = this.calculateOverallScore(compliance);
-      
+
       // Generate recommendations
       compliance.recommendations = this.generateRecommendations(compliance);
 
@@ -129,7 +129,7 @@ class DesignSystemAnalyzer {
     // Analyze color distribution
     const colorDistribution = this.analyzeColorDistribution(colors);
     colorSystem.distribution = colorDistribution;
-    
+
     if (colorDistribution.primary_dominance > 0.4) {
       colorSystem.consistency_score += 0.1;
       colorSystem.strengths.push('Strong primary color dominance');
@@ -143,7 +143,7 @@ class DesignSystemAnalyzer {
    */
   async analyzeTypographySystem(analysisResult) {
     const textElements = analysisResult.text_extraction?.structured_text || [];
-    
+
     const typographySystem = {
       font_sizes: [],
       size_scale: 'unknown',
@@ -311,7 +311,7 @@ class DesignSystemAnalyzer {
     // Calculate reusability score
     const reusableTypes = Object.values(componentSystem.component_types)
       .filter(typeComponents => typeComponents.length >= 2);
-    
+
     componentSystem.reusability_score = reusableTypes.length / Object.keys(componentSystem.component_types).length;
 
     if (componentSystem.reusability_score > 0.6) {
@@ -345,9 +345,9 @@ class DesignSystemAnalyzer {
       const totalElements = components.length;
       const alignedElements = (alignmentAnalysis.horizontal_groups?.reduce((sum, group) => sum + group.elements.length, 0) || 0) +
                             (alignmentAnalysis.vertical_groups?.reduce((sum, group) => sum + group.elements.length, 0) || 0);
-      
+
       layoutSystem.alignment_quality = Math.min(alignedElements / totalElements, 1);
-      
+
       if (layoutSystem.alignment_quality > 0.7) {
         layoutSystem.strengths.push('Strong element alignment');
         layoutSystem.consistency_score += 0.3;
@@ -360,7 +360,7 @@ class DesignSystemAnalyzer {
     if (layoutAnalysis.grid_analysis?.detected) {
       layoutSystem.strengths.push('Grid-based layout system');
       layoutSystem.consistency_score += 0.4;
-      
+
       const grid = layoutAnalysis.grid_analysis;
       if (grid.regularity > 0.8) {
         layoutSystem.strengths.push('Highly regular grid structure');
@@ -372,9 +372,9 @@ class DesignSystemAnalyzer {
     if (layoutAnalysis.spacing_analysis) {
       const hSpacing = layoutAnalysis.spacing_analysis.horizontal_spacing;
       const vSpacing = layoutAnalysis.spacing_analysis.vertical_spacing;
-      
+
       const avgConsistency = ((hSpacing?.consistency || 0) + (vSpacing?.consistency || 0)) / 2;
-      
+
       if (avgConsistency > 0.7) {
         layoutSystem.strengths.push('Consistent spacing throughout layout');
         layoutSystem.consistency_score += 0.1;
@@ -386,7 +386,7 @@ class DesignSystemAnalyzer {
     // Check for responsive design indicators
     const responsiveIndicators = this.detectResponsiveIndicators(analysisResult);
     layoutSystem.responsive_indicators = responsiveIndicators;
-    
+
     if (responsiveIndicators.length > 0) {
       layoutSystem.strengths.push(`${responsiveIndicators.length} responsive design indicators`);
       layoutSystem.consistency_score += 0.1;
@@ -400,10 +400,10 @@ class DesignSystemAnalyzer {
    */
   identifySemanticColors(colors) {
     const semanticColors = [];
-    
+
     colors.forEach(color => {
       const hsl = this.hexToHSL(color.hex);
-      
+
       // Green range - success
       if (hsl.h >= 90 && hsl.h <= 150 && hsl.s > 0.3) {
         semanticColors.push({ ...color, semantic: 'success' });
@@ -435,7 +435,7 @@ class DesignSystemAnalyzer {
 
     const totalPercentage = colors.reduce((sum, color) => sum + color.percentage, 0);
     const primaryColor = colors[0];
-    
+
     return {
       primary_dominance: primaryColor.percentage / totalPercentage,
       top_3_dominance: colors.slice(0, 3).reduce((sum, color) => sum + color.percentage, 0) / totalPercentage,
@@ -471,25 +471,25 @@ class DesignSystemAnalyzer {
     for (const [scaleName, expectedRatio] of Object.entries(this.designSystemPatterns.typography.modular_scales)) {
       const avgRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
       const ratioConsistency = 1 - Math.abs(avgRatio - expectedRatio) / expectedRatio;
-      
+
       if (ratioConsistency > 0.7) {
         scaleChecks.push({ scale: scaleName, consistency: ratioConsistency, ratio: expectedRatio });
       }
     }
 
     if (scaleChecks.length > 0) {
-      const bestScale = scaleChecks.reduce((best, current) => 
+      const bestScale = scaleChecks.reduce((best, current) =>
         current.consistency > best.consistency ? current : best
       );
-      return { 
-        scale_type: bestScale.scale, 
+      return {
+        scale_type: bestScale.scale,
         consistency: bestScale.consistency,
         ratio: bestScale.ratio
       };
     }
 
     // Check against common font sizes
-    const commonSizeMatches = fontSizes.filter(size => 
+    const commonSizeMatches = fontSizes.filter(size =>
       this.designSystemPatterns.typography.common_scales.includes(size)
     );
 
@@ -507,7 +507,7 @@ class DesignSystemAnalyzer {
    */
   analyzeTypographyHierarchy(textElements) {
     const sizeGroups = {};
-    
+
     textElements.forEach(text => {
       const size = text.font_info?.estimated_size;
       if (size) {
@@ -520,15 +520,15 @@ class DesignSystemAnalyzer {
     });
 
     const levels = Object.keys(sizeGroups).map(Number).sort((a, b) => b - a);
-    
+
     // Check if hierarchy makes sense (larger sizes for headers, etc.)
     let hierarchyClarity = 0;
-    
+
     if (levels.length >= 2) {
       // Check if largest sizes are used for headers
       const largestSizeTexts = sizeGroups[levels[0]];
       const headerCount = largestSizeTexts.filter(text => text.type === 'header').length;
-      
+
       if (headerCount / largestSizeTexts.length > 0.5) {
         hierarchyClarity += 0.4;
       }
@@ -536,7 +536,7 @@ class DesignSystemAnalyzer {
       // Check for reasonable size differences between levels
       const sizeDifferences = [];
       for (let i = 1; i < levels.length; i++) {
-        sizeDifferences.push(levels[i-1] - levels[i]);
+        sizeDifferences.push(levels[i - 1] - levels[i]);
       }
 
       const avgDifference = sizeDifferences.reduce((a, b) => a + b, 0) / sizeDifferences.length;
@@ -547,7 +547,7 @@ class DesignSystemAnalyzer {
       // Check for consistent level usage
       const levelUsage = levels.map(level => sizeGroups[level].length);
       const usageVariance = this.calculateVariance(levelUsage);
-      
+
       if (usageVariance < 0.5) {
         hierarchyClarity += 0.2;
       }
@@ -565,13 +565,13 @@ class DesignSystemAnalyzer {
    */
   extractSpacingValues(components) {
     const spacingValues = [];
-    
+
     // Calculate distances between components
     for (let i = 0; i < components.length; i++) {
       for (let j = i + 1; j < components.length; j++) {
         const comp1 = components[i];
         const comp2 = components[j];
-        
+
         // Horizontal spacing
         const horizontalSpacing = Math.abs(comp1.position.x - (comp2.position.x + comp2.position.width));
         if (horizontalSpacing < 200) {
@@ -607,19 +607,19 @@ class DesignSystemAnalyzer {
     }
 
     const uniqueValues = [...new Set(spacingValues)].sort((a, b) => a - b);
-    
+
     // Check against common spacing scales
     const scaleMatches = {};
-    
+
     for (const [scaleName, scaleValues] of Object.entries(this.designSystemPatterns.spacing)) {
-      const matches = uniqueValues.filter(value => 
+      const matches = uniqueValues.filter(value =>
         scaleValues.some(scaleValue => Math.abs(value - scaleValue) <= this.options.spacingTolerance)
       );
-      
+
       scaleMatches[scaleName] = matches.length / uniqueValues.length;
     }
 
-    const bestMatch = Object.entries(scaleMatches).reduce((best, [scale, score]) => 
+    const bestMatch = Object.entries(scaleMatches).reduce((best, [scale, score]) =>
       score > best.score ? { scale, score } : best
     , { scale: 'custom', score: 0 });
 
@@ -641,7 +641,7 @@ class DesignSystemAnalyzer {
 
     const sortedCounts = Object.entries(counts).sort(([, a], [, b]) => b - a);
     const totalValues = spacingValues.length;
-    
+
     return {
       most_common_value: parseInt(sortedCounts[0]?.[0] || 0),
       most_common_usage: (sortedCounts[0]?.[1] || 0) / totalValues,
@@ -663,10 +663,10 @@ class DesignSystemAnalyzer {
     // Analyze size consistency
     const widths = components.map(comp => comp.position.width);
     const heights = components.map(comp => comp.position.height);
-    
+
     const widthConsistency = 1 - this.calculateVariance(widths);
     const heightConsistency = 1 - this.calculateVariance(heights);
-    
+
     analysis.size_consistency = (widthConsistency + heightConsistency) / 2;
 
     // Analyze text content consistency (for buttons, etc.)
@@ -674,7 +674,7 @@ class DesignSystemAnalyzer {
       const textLengths = components
         .map(comp => comp.text_content?.length || 0)
         .filter(length => length > 0);
-      
+
       if (textLengths.length > 0) {
         const textConsistency = 1 - this.calculateVariance(textLengths);
         analysis.text_consistency = textConsistency;
@@ -709,7 +709,7 @@ class DesignSystemAnalyzer {
 
     // Check for relative sizing
     const imageWidth = analysisResult.image_metadata?.width || 1000;
-    const relativeComponents = components.filter(comp => 
+    const relativeComponents = components.filter(comp =>
       comp.position.width / imageWidth > 0.8 || comp.position.width / imageWidth < 0.2
     );
 
@@ -844,7 +844,7 @@ class DesignSystemAnalyzer {
       h /= 6;
     }
 
-    return { h: h * 360, s: s, l: l };
+    return { h: h * 360, s, l };
   }
 
   calculateVariance(values) {
@@ -855,4 +855,4 @@ class DesignSystemAnalyzer {
   }
 }
 
-module.exports = DesignSystemAnalyzer; 
+module.exports = DesignSystemAnalyzer;

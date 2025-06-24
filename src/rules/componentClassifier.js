@@ -27,7 +27,7 @@ class ComponentClassifier {
         ],
         confidence: 0.8
       },
-      
+
       input: {
         patterns: [
           { type: 'text', keywords: ['enter', 'input', 'search', 'email', 'password', 'name', 'address', 'phone'] },
@@ -37,7 +37,7 @@ class ComponentClassifier {
         ],
         confidence: 0.7
       },
-      
+
       navigation: {
         patterns: [
           { type: 'text', keywords: ['home', 'about', 'contact', 'services', 'products', 'menu', 'nav'] },
@@ -46,7 +46,7 @@ class ComponentClassifier {
         ],
         confidence: 0.9
       },
-      
+
       header: {
         patterns: [
           { type: 'position', criteria: { topRegion: true } },
@@ -55,7 +55,7 @@ class ComponentClassifier {
         ],
         confidence: 0.8
       },
-      
+
       footer: {
         patterns: [
           { type: 'position', criteria: { bottomRegion: true } },
@@ -64,7 +64,7 @@ class ComponentClassifier {
         ],
         confidence: 0.8
       },
-      
+
       card: {
         patterns: [
           { type: 'shape', criteria: { rectangular: true, aspectRatio: [0.3, 3] } },
@@ -73,7 +73,7 @@ class ComponentClassifier {
         ],
         confidence: 0.7
       },
-      
+
       image: {
         patterns: [
           { type: 'shape', criteria: { rectangular: true } },
@@ -82,7 +82,7 @@ class ComponentClassifier {
         ],
         confidence: 0.6
       },
-      
+
       text_block: {
         patterns: [
           { type: 'text', criteria: { hasText: true, longText: true } },
@@ -91,7 +91,7 @@ class ComponentClassifier {
         ],
         confidence: 0.8
       },
-      
+
       sidebar: {
         patterns: [
           { type: 'position', criteria: { sideRegion: true } },
@@ -100,7 +100,7 @@ class ComponentClassifier {
         ],
         confidence: 0.7
       },
-      
+
       modal: {
         patterns: [
           { type: 'position', criteria: { centered: true, overlapping: true } },
@@ -121,7 +121,7 @@ class ComponentClassifier {
    */
   async classify(visualElement, overlappingText, analysisResult) {
     const classifications = [];
-    
+
     // Test each component type
     for (const [componentType, rules] of Object.entries(this.rules)) {
       const score = this.calculateComponentScore(
@@ -131,7 +131,7 @@ class ComponentClassifier {
         overlappingText,
         analysisResult
       );
-      
+
       if (score > 0.3) { // Minimum threshold
         classifications.push({
           type: componentType,
@@ -140,10 +140,10 @@ class ComponentClassifier {
         });
       }
     }
-    
+
     // Sort by confidence and return the best match
     classifications.sort((a, b) => b.confidence - a.confidence);
-    
+
     return classifications.length > 0 ? classifications[0] : {
       type: 'unknown',
       confidence: 0.1,
@@ -157,13 +157,13 @@ class ComponentClassifier {
   calculateComponentScore(componentType, rules, visualElement, overlappingText, analysisResult) {
     let totalScore = 0;
     let maxScore = 0;
-    
+
     for (const pattern of rules.patterns) {
       const { score, weight } = this.evaluatePattern(pattern, visualElement, overlappingText, analysisResult);
       totalScore += score * weight;
       maxScore += weight;
     }
-    
+
     // Apply base confidence
     const normalizedScore = maxScore > 0 ? (totalScore / maxScore) : 0;
     return normalizedScore * rules.confidence;
@@ -175,39 +175,39 @@ class ComponentClassifier {
   evaluatePattern(pattern, visualElement, overlappingText, analysisResult) {
     let score = 0;
     let weight = 1;
-    
+
     switch (pattern.type) {
       case 'text':
         score = this.evaluateTextPattern(pattern, overlappingText);
         weight = 1.2; // Text patterns are highly indicative
         break;
-        
+
       case 'shape':
         score = this.evaluateShapePattern(pattern, visualElement);
         weight = 1.0;
         break;
-        
+
       case 'size':
         score = this.evaluateSizePattern(pattern, visualElement);
         weight = 0.8;
         break;
-        
+
       case 'position':
         score = this.evaluatePositionPattern(pattern, visualElement, analysisResult);
         weight = 1.0;
         break;
-        
+
       case 'visual':
         score = this.evaluateVisualPattern(pattern, visualElement, overlappingText);
         weight = 0.9;
         break;
-        
+
       case 'container':
         score = this.evaluateContainerPattern(pattern, visualElement, analysisResult);
         weight = 0.7;
         break;
     }
-    
+
     return { score, weight };
   }
 
@@ -218,31 +218,31 @@ class ComponentClassifier {
     if (!overlappingText || overlappingText.trim().length === 0) {
       return pattern.criteria?.hasText ? 0 : 0.1;
     }
-    
+
     const text = overlappingText.toLowerCase();
-    
+
     // Check for specific keywords
     if (pattern.keywords) {
-      const matchingKeywords = pattern.keywords.filter(keyword => 
+      const matchingKeywords = pattern.keywords.filter(keyword =>
         text.includes(keyword.toLowerCase())
       );
-      
+
       if (matchingKeywords.length > 0) {
         return Math.min(1.0, matchingKeywords.length / 3); // Diminishing returns
       }
     }
-    
+
     // Check for text criteria
     if (pattern.criteria) {
       let score = 0;
-      
+
       if (pattern.criteria.hasText && text.length > 0) score += 0.5;
       if (pattern.criteria.longText && text.length > 50) score += 0.3;
       if (pattern.criteria.shortText && text.length < 20) score += 0.3;
-      
+
       return Math.min(score, 1.0);
     }
-    
+
     return 0;
   }
 
@@ -252,22 +252,22 @@ class ComponentClassifier {
   evaluateShapePattern(pattern, visualElement) {
     let score = 0;
     const criteria = pattern.criteria;
-    
+
     if (criteria.rectangular && visualElement.type === 'rectangle') {
       score += 0.5;
     }
-    
+
     if (criteria.circular && visualElement.type === 'circle') {
       score += 0.5;
     }
-    
+
     if (criteria.aspectRatio && visualElement.aspect_ratio) {
       const [minRatio, maxRatio] = criteria.aspectRatio;
       if (visualElement.aspect_ratio >= minRatio && visualElement.aspect_ratio <= maxRatio) {
         score += 0.4;
       }
     }
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -278,16 +278,16 @@ class ComponentClassifier {
     let score = 0;
     const criteria = pattern.criteria;
     const pos = visualElement.position;
-    
+
     if (criteria.minWidth && pos.width >= criteria.minWidth) score += 0.2;
     if (criteria.maxWidth && pos.width <= criteria.maxWidth) score += 0.2;
     if (criteria.minHeight && pos.height >= criteria.minHeight) score += 0.2;
     if (criteria.maxHeight && pos.height <= criteria.maxHeight) score += 0.2;
-    
+
     if (criteria.fullWidth && pos.width > 600) score += 0.3; // Assuming full width
     if (criteria.moderateSize && pos.width > 200 && pos.width < 600 && pos.height > 100 && pos.height < 400) score += 0.3;
     if (criteria.tallAspectRatio && visualElement.aspect_ratio && visualElement.aspect_ratio < 0.5) score += 0.3;
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -300,14 +300,14 @@ class ComponentClassifier {
     const pos = visualElement.position;
     const imageHeight = analysisResult?.image_metadata?.height || 1000;
     const imageWidth = analysisResult?.image_metadata?.width || 1000;
-    
+
     if (criteria.topRegion && pos.y < imageHeight * 0.2) score += 0.4;
     if (criteria.bottomRegion && pos.y > imageHeight * 0.8) score += 0.4;
     if (criteria.sideRegion && (pos.x < imageWidth * 0.2 || pos.x > imageWidth * 0.8)) score += 0.4;
-    if (criteria.centered && Math.abs(pos.x + pos.width/2 - imageWidth/2) < imageWidth * 0.1) score += 0.3;
+    if (criteria.centered && Math.abs(pos.x + pos.width / 2 - imageWidth / 2) < imageWidth * 0.1) score += 0.3;
     if (criteria.fullWidth && pos.width > imageWidth * 0.8) score += 0.4;
     if (criteria.isolated && this.isElementIsolated(visualElement, analysisResult)) score += 0.3;
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -317,14 +317,14 @@ class ComponentClassifier {
   evaluateVisualPattern(pattern, visualElement, overlappingText) {
     let score = 0;
     const criteria = pattern.criteria;
-    
+
     if (criteria.hasOutline && visualElement.type === 'rectangle') score += 0.3;
     if (criteria.noText && (!overlappingText || overlappingText.trim().length === 0)) score += 0.3;
     if (criteria.hasText && overlappingText && overlappingText.trim().length > 0) score += 0.3;
     if (criteria.standalone && visualElement.confidence > 0.7) score += 0.2;
     if (criteria.elevated && visualElement.type === 'rectangle') score += 0.2; // Simplified
     if (criteria.hasVisualContent && visualElement.area > 1000) score += 0.3;
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -334,13 +334,13 @@ class ComponentClassifier {
   evaluateContainerPattern(pattern, visualElement, analysisResult) {
     let score = 0;
     const criteria = pattern.criteria;
-    
+
     if (criteria.hasMultipleElements) {
       // Check if this element contains or is near other elements
       const nearbyElements = this.findNearbyElements(visualElement, analysisResult);
       if (nearbyElements.length >= 2) score += 0.4;
     }
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -350,16 +350,16 @@ class ComponentClassifier {
   isElementIsolated(element, analysisResult) {
     const allElements = analysisResult?.vision_analysis?.visual_elements || [];
     const minDistance = 50;
-    
+
     for (const other of allElements) {
       if (other.id === element.id) continue;
-      
+
       const distance = this.calculateDistance(element.position, other.position);
       if (distance < minDistance) {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -370,16 +370,16 @@ class ComponentClassifier {
     const allElements = analysisResult?.vision_analysis?.visual_elements || [];
     const maxDistance = 100;
     const nearby = [];
-    
+
     for (const other of allElements) {
       if (other.id === element.id) continue;
-      
+
       const distance = this.calculateDistance(element.position, other.position);
       if (distance < maxDistance) {
         nearby.push(other);
       }
     }
-    
+
     return nearby;
   }
 
@@ -391,7 +391,7 @@ class ComponentClassifier {
     const centerY1 = pos1.y + pos1.height / 2;
     const centerX2 = pos2.x + pos2.width / 2;
     const centerY2 = pos2.y + pos2.height / 2;
-    
+
     return Math.sqrt(Math.pow(centerX2 - centerX1, 2) + Math.pow(centerY2 - centerY1, 2));
   }
 
@@ -400,12 +400,12 @@ class ComponentClassifier {
    */
   generateReasoning(componentType, rules, visualElement, overlappingText) {
     const reasons = [];
-    
+
     // Check text patterns
     if (overlappingText && overlappingText.trim().length > 0) {
       const textPattern = rules.patterns.find(p => p.type === 'text');
       if (textPattern && textPattern.keywords) {
-        const matchingKeywords = textPattern.keywords.filter(keyword => 
+        const matchingKeywords = textPattern.keywords.filter(keyword =>
           overlappingText.toLowerCase().includes(keyword.toLowerCase())
         );
         if (matchingKeywords.length > 0) {
@@ -413,12 +413,12 @@ class ComponentClassifier {
         }
       }
     }
-    
+
     // Check shape patterns
     if (visualElement.type === 'rectangle') {
       reasons.push('Has rectangular shape');
     }
-    
+
     // Check size patterns
     const sizePattern = rules.patterns.find(p => p.type === 'size');
     if (sizePattern && sizePattern.criteria) {
@@ -427,7 +427,7 @@ class ComponentClassifier {
         reasons.push(`Width meets minimum requirement (${visualElement.position.width}px >= ${criteria.minWidth}px)`);
       }
     }
-    
+
     // Check aspect ratio
     if (visualElement.aspect_ratio) {
       const shapePattern = rules.patterns.find(p => p.type === 'shape');
@@ -438,7 +438,7 @@ class ComponentClassifier {
         }
       }
     }
-    
+
     return reasons.length > 0 ? reasons.join('; ') : `General ${componentType} pattern match`;
   }
 
@@ -447,20 +447,20 @@ class ComponentClassifier {
    */
   async batchClassify(visualElements, textElements, analysisResult) {
     const classifications = [];
-    
+
     for (const visualElement of visualElements) {
       // Find overlapping text
       const overlappingText = this.findOverlappingText(visualElement, textElements);
-      
+
       // Classify the element
       const classification = await this.classify(visualElement, overlappingText, analysisResult);
-      
+
       classifications.push({
         element_id: visualElement.id,
         ...classification
       });
     }
-    
+
     return classifications;
   }
 
@@ -507,7 +507,7 @@ class ComponentClassifier {
     for (const classification of classifications) {
       // Count by type
       stats.by_type[classification.type] = (stats.by_type[classification.type] || 0) + 1;
-      
+
       // Count by confidence level
       if (classification.confidence > 0.8) {
         stats.confidence_distribution.high++;
@@ -516,7 +516,7 @@ class ComponentClassifier {
       } else {
         stats.confidence_distribution.low++;
       }
-      
+
       totalConfidence += classification.confidence;
     }
 
@@ -526,4 +526,4 @@ class ComponentClassifier {
   }
 }
 
-module.exports = ComponentClassifier; 
+module.exports = ComponentClassifier;

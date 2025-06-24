@@ -33,14 +33,14 @@ class SVGExporter {
   async exportToSVG(analysisResult, options = {}) {
     try {
       const exportOptions = { ...this.options, ...options };
-      
+
       const imageMetadata = analysisResult.image_metadata || {};
       const width = imageMetadata.width || 1000;
       const height = imageMetadata.height || 800;
 
       // Create SVG structure
       let svg = this.createSVGHeader(width, height);
-      
+
       // Add background image if requested
       if (exportOptions.includeOriginalImage && imageMetadata.file_path) {
         svg += this.addBackgroundImage(imageMetadata.file_path, width, height);
@@ -118,18 +118,18 @@ class SVGExporter {
    */
   addComponentBoundingBoxes(components) {
     let svg = '  <!-- Component Bounding Boxes -->\n';
-    
+
     components.forEach((component, index) => {
       const pos = component.position;
       const color = this.colors[component.type] || this.colors.default;
-      
+
       svg += `  <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}"
            class="component-box" stroke="${color}" 
            data-component-id="${component.id}" data-component-type="${component.type}">
     <title>${component.type} - ${component.text_content || 'No text'}</title>
   </rect>
 `;
-      
+
       // Add component label
       svg += `  <text x="${pos.x + 5}" y="${pos.y - 5}" class="text-element" 
            fill="${color}" font-size="10px">
@@ -146,12 +146,12 @@ class SVGExporter {
    */
   addTextElements(textExtraction) {
     let svg = '  <!-- Text Elements -->\n';
-    
+
     if (textExtraction.structured_text) {
       textExtraction.structured_text.forEach((textElement, index) => {
         const pos = textElement.position;
         const fontSize = textElement.font_info?.estimated_size || this.options.fontSize;
-        
+
         svg += `  <text x="${pos.x}" y="${pos.y + fontSize}" 
              class="text-element" font-size="${fontSize}px" 
              fill="#333" opacity="0.8"
@@ -171,11 +171,11 @@ class SVGExporter {
    */
   addColorPalette(colorAnalysis, canvasWidth, canvasHeight) {
     let svg = '  <!-- Color Palette -->\n';
-    
+
     if (colorAnalysis.color_palette) {
       const paletteY = canvasHeight + 20;
       const boxSize = this.options.colorBoxSize;
-      
+
       svg += `  <text x="10" y="${paletteY - 5}" class="legend-text" font-weight="bold">
     Color Palette
   </text>
@@ -183,16 +183,16 @@ class SVGExporter {
 
       colorAnalysis.color_palette.slice(0, 10).forEach((color, index) => {
         const x = 10 + (index * (boxSize + 5));
-        
+
         svg += `  <rect x="${x}" y="${paletteY}" width="${boxSize}" height="${boxSize}"
              fill="${color.hex}" stroke="#333" stroke-width="1"
              data-color="${color.hex}" data-percentage="${color.percentage}">
     <title>${color.hex} - ${color.percentage.toFixed(1)}%</title>
   </rect>
 `;
-        
+
         // Add color label
-        svg += `  <text x="${x + boxSize/2}" y="${paletteY + boxSize + 15}" 
+        svg += `  <text x="${x + boxSize / 2}" y="${paletteY + boxSize + 15}" 
              class="legend-text" text-anchor="middle" font-size="8px">
     ${color.hex}
   </text>
@@ -208,20 +208,20 @@ class SVGExporter {
    */
   addLayoutGuides(layoutAnalysis, width, height) {
     let svg = '  <!-- Layout Guides -->\n';
-    
+
     // Add grid lines if grid detected
     if (layoutAnalysis.grid_analysis?.detected) {
       const grid = layoutAnalysis.grid_analysis;
       const cellWidth = width / grid.columns;
       const cellHeight = height / grid.rows;
-      
+
       // Vertical grid lines
       for (let i = 1; i < grid.columns; i++) {
         const x = i * cellWidth;
         svg += `  <line x1="${x}" y1="0" x2="${x}" y2="${height}" class="layout-guide" />
 `;
       }
-      
+
       // Horizontal grid lines
       for (let i = 1; i < grid.rows; i++) {
         const y = i * cellHeight;
@@ -233,7 +233,7 @@ class SVGExporter {
     // Add alignment guides
     if (layoutAnalysis.alignment_analysis) {
       const alignment = layoutAnalysis.alignment_analysis;
-      
+
       // Horizontal alignment lines
       if (alignment.horizontal_groups) {
         alignment.horizontal_groups.forEach((group, index) => {
@@ -245,7 +245,7 @@ class SVGExporter {
           }
         });
       }
-      
+
       // Vertical alignment lines
       if (alignment.vertical_groups) {
         alignment.vertical_groups.forEach((group, index) => {
@@ -267,17 +267,17 @@ class SVGExporter {
    */
   addPatternAnnotations(advancedPatterns) {
     let svg = '  <!-- Pattern Annotations -->\n';
-    
+
     if (advancedPatterns.detected_patterns) {
       advancedPatterns.detected_patterns.forEach((pattern, index) => {
         // Add pattern labels at appropriate positions
         const y = 20 + (index * 20);
-        
+
         svg += `  <text x="10" y="${y}" class="pattern-annotation" font-weight="bold">
     Pattern: ${pattern.pattern} (${Math.round(pattern.confidence * 100)}%)
   </text>
 `;
-        
+
         if (pattern.evidence && pattern.evidence.length > 0) {
           svg += `  <text x="20" y="${y + 12}" class="pattern-annotation" font-size="9px">
     ${pattern.evidence[0]}
@@ -296,7 +296,7 @@ class SVGExporter {
   addLegend(width, height) {
     const legendY = height + 80;
     let svg = '  <!-- Legend -->\n';
-    
+
     svg += `  <text x="10" y="${legendY}" class="legend-text" font-weight="bold">
     Component Types
   </text>
@@ -307,7 +307,7 @@ class SVGExporter {
       const x = 10 + (index * 100);
       const y = legendY + 20;
       const color = this.colors[type];
-      
+
       svg += `  <rect x="${x}" y="${y - 10}" width="15" height="10" 
            fill="none" stroke="${color}" stroke-width="2" />
   <text x="${x + 20}" y="${y}" class="legend-text">
@@ -333,18 +333,18 @@ class SVGExporter {
     try {
       const components = analysisResult.components || [];
       const relationships = analysisResult.component_relationships?.hierarchical_relationships || {};
-      
+
       let svg = this.createSVGHeader(1000, 800);
       svg += '  <!-- Component Hierarchy -->\n';
-      
+
       // Build hierarchy tree
       const hierarchy = this.buildHierarchyTree(components, relationships);
-      
+
       // Render hierarchy
       svg += this.renderHierarchyNode(hierarchy, 0, 0, 0);
-      
+
       svg += this.createSVGFooter();
-      
+
       return svg;
     } catch (error) {
       throw new Error(`Component hierarchy export failed: ${error.message}`);
@@ -365,7 +365,7 @@ class SVGExporter {
         children: []
       }))
     };
-    
+
     return tree;
   }
 
@@ -376,10 +376,10 @@ class SVGExporter {
     let svg = '';
     const indent = level * 20;
     const nodeHeight = 25;
-    
+
     if (node.id !== 'root') {
       const color = this.colors[node.type] || this.colors.default;
-      
+
       svg += `  <g transform="translate(${x + indent}, ${y})">
     <rect x="0" y="0" width="150" height="${nodeHeight}" 
           fill="${color}" opacity="0.2" stroke="${color}" />
@@ -389,14 +389,14 @@ class SVGExporter {
   </g>
 `;
     }
-    
+
     // Render children
     let childY = y + (node.id !== 'root' ? nodeHeight + 5 : 0);
     node.children.forEach(child => {
       svg += this.renderHierarchyNode(child, x, childY, level + 1);
       childY += nodeHeight + 5;
     });
-    
+
     return svg;
   }
 
@@ -412,25 +412,25 @@ class SVGExporter {
 
       let svg = this.createSVGHeader(width, height);
       svg += '  <!-- Layout Wireframe -->\n';
-      
+
       // Add wireframe boxes for each component
       components.forEach(component => {
         const pos = component.position;
         const strokeColor = this.colors[component.type] || this.colors.default;
-        
+
         svg += `  <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}"
              fill="none" stroke="${strokeColor}" stroke-width="2" 
              stroke-dasharray="5,5" opacity="0.8">
     <title>${component.type}</title>
   </rect>
 `;
-        
+
         // Add placeholder content
         if (component.type === 'button') {
           svg += `  <rect x="${pos.x + 5}" y="${pos.y + 5}" 
                width="${pos.width - 10}" height="${pos.height - 10}"
                fill="${strokeColor}" opacity="0.1" />
-  <text x="${pos.x + pos.width/2}" y="${pos.y + pos.height/2}" 
+  <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
         text-anchor="middle" class="legend-text">
     BUTTON
   </text>
@@ -439,7 +439,7 @@ class SVGExporter {
           svg += `  <rect x="${pos.x + 5}" y="${pos.y + 5}" 
                width="${pos.width - 10}" height="${pos.height - 10}"
                fill="white" stroke="#ccc" />
-  <text x="${pos.x + 10}" y="${pos.y + pos.height/2}" 
+  <text x="${pos.x + 10}" y="${pos.y + pos.height / 2}" 
         class="legend-text" fill="#999">
     Input field
   </text>
@@ -448,16 +448,16 @@ class SVGExporter {
           svg += `  <rect x="${pos.x + 5}" y="${pos.y + 5}" 
                width="${pos.width - 10}" height="${pos.height - 10}"
                fill="#f0f0f0" stroke="#ccc" />
-  <text x="${pos.x + pos.width/2}" y="${pos.y + pos.height/2}" 
+  <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
         text-anchor="middle" class="legend-text">
     IMAGE
   </text>
 `;
         }
       });
-      
+
       svg += this.createSVGFooter();
-      
+
       return svg;
     } catch (error) {
       throw new Error(`Layout wireframe export failed: ${error.message}`);
@@ -470,7 +470,7 @@ class SVGExporter {
   async exportInteractiveSVG(analysisResult, options = {}) {
     try {
       const svg = await this.exportToSVG(analysisResult, options);
-      
+
       // Add JavaScript for interactivity
       const interactiveScript = `
 <script type="text/javascript">
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 `;
 
       // Insert script before closing SVG tag
-      return svg.replace('</svg>', interactiveScript + '\n</svg>');
+      return svg.replace('</svg>', `${interactiveScript  }\n</svg>`);
     } catch (error) {
       throw new Error(`Interactive SVG export failed: ${error.message}`);
     }
@@ -545,4 +545,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 
-module.exports = SVGExporter; 
+module.exports = SVGExporter;

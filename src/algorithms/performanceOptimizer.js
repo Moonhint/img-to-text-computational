@@ -38,7 +38,7 @@ class PerformanceOptimizer {
       averageTime: 0,
       errorCount: 0
     };
-    
+
     // Enhanced performance tracking
     this.memoryPool = new Map();
     this.performanceProfile = {
@@ -114,11 +114,11 @@ class PerformanceOptimizer {
    */
   async optimizeProcessing(imageInput, processingOptions = {}) {
     const startTime = Date.now();
-    
+
     try {
       // Generate cache key
       const cacheKey = await this.generateCacheKey(imageInput, processingOptions);
-      
+
       // Check cache first
       if (this.options.enableCaching) {
         const cachedResult = await this.getCachedResult(cacheKey);
@@ -133,10 +133,10 @@ class PerformanceOptimizer {
 
       // Optimize image before processing
       const optimizedImage = await this.optimizeImage(imageInput);
-      
+
       // Process with performance optimizations
       const result = await this.processWithOptimizations(optimizedImage, processingOptions);
-      
+
       // Cache result if enabled
       if (this.options.enableCaching) {
         await this.cacheResult(cacheKey, result);
@@ -178,14 +178,14 @@ class PerformanceOptimizer {
     try {
       // Split into chunks for memory management
       const chunks = this.chunkArray(imageInputs, this.options.chunkSize);
-      
+
       for (const chunk of chunks) {
         // Process chunk in parallel with worker pool
         const chunkResults = await this.processChunkInParallel(chunk, processingOptions);
         results.push(...chunkResults);
-        
+
         processedCount += chunk.length;
-        
+
         // Call progress callback if provided
         if (progressCallback) {
           progressCallback({
@@ -204,7 +204,7 @@ class PerformanceOptimizer {
       }
 
       return {
-        results: results,
+        results,
         batch_stats: {
           total_images: totalImages,
           successful: results.filter(r => !r.error).length,
@@ -227,7 +227,7 @@ class PerformanceOptimizer {
       const Sharp = require('sharp');
       let imageBuffer;
       let originalSize = 0;
-      
+
       // Convert input to buffer
       if (typeof imageInput === 'string') {
         imageBuffer = await fs.readFile(imageInput);
@@ -238,10 +238,10 @@ class PerformanceOptimizer {
       }
 
       originalSize = imageBuffer.length;
-      
+
       // Get image metadata
       const metadata = await Sharp(imageBuffer).metadata();
-      
+
       let optimizedBuffer = imageBuffer;
       let wasOptimized = false;
 
@@ -249,12 +249,12 @@ class PerformanceOptimizer {
       if (metadata.width > this.options.maxImageSize || metadata.height > this.options.maxImageSize) {
         const maxDimension = Math.max(metadata.width, metadata.height);
         const scale = this.options.maxImageSize / maxDimension;
-        
+
         optimizedBuffer = await Sharp(imageBuffer)
           .resize(Math.round(metadata.width * scale), Math.round(metadata.height * scale))
           .jpeg({ quality: 90 })
           .toBuffer();
-        
+
         wasOptimized = true;
       }
 
@@ -263,7 +263,7 @@ class PerformanceOptimizer {
         const compressed = await Sharp(optimizedBuffer)
           .jpeg({ quality: 85, progressive: true })
           .toBuffer();
-        
+
         if (compressed.length < optimizedBuffer.length) {
           optimizedBuffer = compressed;
           wasOptimized = true;
@@ -276,7 +276,7 @@ class PerformanceOptimizer {
           .sharpen()
           .normalize()
           .toBuffer();
-        
+
         wasOptimized = true;
       }
 
@@ -285,7 +285,7 @@ class PerformanceOptimizer {
         was_optimized: wasOptimized,
         original_size: originalSize,
         optimized_size: optimizedBuffer.length,
-        metadata: metadata,
+        metadata,
         compression_ratio: originalSize / optimizedBuffer.length
       };
     } catch (error) {
@@ -353,7 +353,7 @@ class PerformanceOptimizer {
 
       worker.postMessage({
         type: 'process_image',
-        imageInput: imageInput,
+        imageInput,
         options: processingOptions
       });
 
@@ -379,13 +379,13 @@ class PerformanceOptimizer {
   async initializeCache() {
     try {
       await fs.mkdir(this.options.cacheDirectory, { recursive: true });
-      
+
       // Load existing cache index
       const cacheIndexPath = path.join(this.options.cacheDirectory, 'cache-index.json');
       try {
         const indexData = await fs.readFile(cacheIndexPath, 'utf8');
         const cacheIndex = JSON.parse(indexData);
-        
+
         // Validate cache entries
         for (const [key, entry] of Object.entries(cacheIndex)) {
           const filePath = path.join(this.options.cacheDirectory, entry.filename);
@@ -410,10 +410,10 @@ class PerformanceOptimizer {
    */
   async initializeWorkerPool() {
     const workerScript = path.join(__dirname, 'processing-worker.js');
-    
+
     // Create worker script if it doesn't exist
     await this.createWorkerScript(workerScript);
-    
+
     for (let i = 0; i < this.options.maxConcurrentWorkers; i++) {
       try {
         const worker = new Worker(workerScript);
@@ -491,7 +491,7 @@ parentPort.on('message', async (message) => {
    */
   async generateCacheKey(imageInput, processingOptions) {
     const crypto = require('crypto');
-    
+
     let imageHash = '';
     if (typeof imageInput === 'string') {
       // File path - use file stats
@@ -503,7 +503,7 @@ parentPort.on('message', async (message) => {
     }
 
     const optionsHash = crypto.createHash('md5').update(JSON.stringify(processingOptions)).digest('hex');
-    
+
     return `${imageHash}-${optionsHash}`;
   }
 
@@ -519,7 +519,7 @@ parentPort.on('message', async (message) => {
       const cacheEntry = this.cache.get(cacheKey);
       const filePath = path.join(this.options.cacheDirectory, cacheEntry.filename);
       const data = await fs.readFile(filePath, 'utf8');
-      
+
       return {
         ...JSON.parse(data),
         cache_hit: true,
@@ -539,11 +539,11 @@ parentPort.on('message', async (message) => {
     try {
       const filename = `${cacheKey}.json`;
       const filePath = path.join(this.options.cacheDirectory, filename);
-      
+
       await fs.writeFile(filePath, JSON.stringify(result, null, 2));
-      
+
       this.cache.set(cacheKey, {
-        filename: filename,
+        filename,
         timestamp: Date.now(),
         size: JSON.stringify(result).length
       });
@@ -564,7 +564,7 @@ parentPort.on('message', async (message) => {
       for (const [key, entry] of this.cache.entries()) {
         cacheIndex[key] = entry;
       }
-      
+
       const indexPath = path.join(this.options.cacheDirectory, 'cache-index.json');
       await fs.writeFile(indexPath, JSON.stringify(cacheIndex, null, 2));
     } catch (error) {
@@ -580,7 +580,7 @@ parentPort.on('message', async (message) => {
       const memUsage = process.memoryUsage();
       this.memoryUsage.current = memUsage.heapUsed;
       this.memoryUsage.peak = Math.max(this.memoryUsage.peak, memUsage.heapUsed);
-      
+
       // Trigger garbage collection if memory usage is high
       if (memUsage.heapUsed > this.options.maxMemoryUsage && global.gc) {
         global.gc();
@@ -608,7 +608,7 @@ parentPort.on('message', async (message) => {
    */
   updateProcessingStats(processingTime, isError) {
     this.processingStats.totalProcessed++;
-    
+
     if (isError) {
       this.processingStats.errorCount++;
     } else {
@@ -693,10 +693,10 @@ parentPort.on('message', async (message) => {
       await Promise.all(
         this.workerPool.map(worker => worker.terminate())
       );
-      
+
       this.workerPool = [];
       this.activeWorkers = 0;
-      
+
       // Update cache index one final time
       if (this.options.enableCaching) {
         await this.updateCacheIndex();
@@ -719,7 +719,7 @@ parentPort.on('message', async (message) => {
   async initializeMemoryPool() {
     try {
       const poolSizes = [1024, 4096, 16384, 65536, 262144, 1048576]; // Different buffer sizes
-      
+
       for (const size of poolSizes) {
         this.memoryPool.set(size, {
           available: [],
@@ -744,7 +744,7 @@ parentPort.on('message', async (message) => {
     // Find the best fit pool
     const poolSize = this.findBestPoolSize(size);
     const pool = this.memoryPool.get(poolSize);
-    
+
     if (pool && pool.available.length > 0) {
       const buffer = pool.available.pop();
       pool.inUse.add(buffer);
@@ -757,7 +757,7 @@ parentPort.on('message', async (message) => {
       pool.inUse.add(buffer);
       pool.totalAllocated++;
     }
-    
+
     return buffer.slice(0, size);
   }
 
@@ -771,10 +771,10 @@ parentPort.on('message', async (message) => {
 
     const poolSize = this.findBestPoolSize(buffer.length);
     const pool = this.memoryPool.get(poolSize);
-    
+
     if (pool && pool.inUse.has(buffer)) {
       pool.inUse.delete(buffer);
-      
+
       if (pool.available.length < pool.maxPoolSize) {
         pool.available.push(buffer);
       }
@@ -801,7 +801,7 @@ parentPort.on('message', async (message) => {
             type: 'preload',
             libraries: ['tesseract.js', 'sharp', 'opencv.js']
           });
-          
+
           worker.once('message', (result) => {
             if (result.type === 'preload_complete') {
               resolve();
@@ -868,7 +868,7 @@ parentPort.on('message', async (message) => {
     try {
       const now = Date.now();
       const timeSinceLastOptimization = now - this.performanceProfile.adaptiveMetrics.lastOptimization;
-      
+
       // Only optimize if enough time has passed and we have data
       if (timeSinceLastOptimization < 60000 || this.performanceProfile.processingTimes.length < 10) {
         return;
@@ -899,9 +899,9 @@ parentPort.on('message', async (message) => {
   optimizeChunkSize() {
     const recentTimes = this.performanceProfile.processingTimes.slice(-20);
     const avgTime = recentTimes.reduce((sum, time) => sum + time, 0) / recentTimes.length;
-    
+
     const currentChunkSize = this.performanceProfile.adaptiveMetrics.optimalChunkSize;
-    
+
     // If processing is too slow, reduce chunk size
     if (avgTime > 5000 && currentChunkSize > 5) {
       this.performanceProfile.adaptiveMetrics.optimalChunkSize = Math.max(5, currentChunkSize - 2);
@@ -921,10 +921,10 @@ parentPort.on('message', async (message) => {
   optimizeWorkerCount() {
     const recentUtilization = this.performanceProfile.workerUtilization.slice(-10);
     const avgUtilization = recentUtilization.reduce((sum, util) => sum + util.utilization, 0) / recentUtilization.length;
-    
+
     const currentWorkerCount = this.performanceProfile.adaptiveMetrics.optimalWorkerCount;
     const maxWorkers = Math.min(os.cpus().length, 8);
-    
+
     // If utilization is high, consider adding workers
     if (avgUtilization > 0.8 && currentWorkerCount < maxWorkers) {
       this.performanceProfile.adaptiveMetrics.optimalWorkerCount = Math.min(maxWorkers, currentWorkerCount + 1);
@@ -940,12 +940,12 @@ parentPort.on('message', async (message) => {
    */
   optimizeCacheSettings() {
     const hitRate = this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses) || 0;
-    
+
     // If hit rate is low and cache is full, implement LRU eviction
     if (hitRate < 0.3 && this.cacheStats.totalSize > this.options.cacheMaxSize * 0.8) {
       this.evictLeastRecentlyUsed();
     }
-    
+
     // If hit rate is high but cache is small, allow more caching
     if (hitRate > 0.7 && this.cacheStats.totalSize < this.options.cacheMaxSize * 0.5) {
       // Cache more aggressively by reducing eviction threshold
@@ -958,9 +958,9 @@ parentPort.on('message', async (message) => {
   evictLeastRecentlyUsed() {
     const cacheEntries = Array.from(this.cache.entries())
       .sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
-    
+
     const entriesToEvict = Math.ceil(cacheEntries.length * 0.2); // Evict 20%
-    
+
     for (let i = 0; i < entriesToEvict; i++) {
       const [key, entry] = cacheEntries[i];
       this.cache.delete(key);
@@ -979,7 +979,7 @@ parentPort.on('message', async (message) => {
 
     try {
       const resultSize = JSON.stringify(result).length;
-      
+
       // Check if we have space or need to evict
       if (this.cacheStats.totalSize + resultSize > this.options.cacheMaxSize) {
         this.evictLeastRecentlyUsed();
@@ -989,11 +989,11 @@ parentPort.on('message', async (message) => {
       if (resultSize > 1000 && resultSize < 1024 * 1024) { // Between 1KB and 1MB
         const filename = `${cacheKey}.json`;
         const filePath = path.join(this.options.cacheDirectory, filename);
-        
+
         await fs.writeFile(filePath, JSON.stringify(result, null, 2));
-        
+
         this.cache.set(cacheKey, {
-          filename: filename,
+          filename,
           timestamp: Date.now(),
           lastAccessed: Date.now(),
           size: resultSize,
@@ -1021,13 +1021,13 @@ parentPort.on('message', async (message) => {
       const cacheEntry = this.cache.get(cacheKey);
       const filePath = path.join(this.options.cacheDirectory, cacheEntry.filename);
       const data = await fs.readFile(filePath, 'utf8');
-      
+
       // Update access tracking
       cacheEntry.lastAccessed = Date.now();
       cacheEntry.accessCount++;
-      
+
       this.cacheStats.hits++;
-      
+
       return {
         ...JSON.parse(data),
         cache_hit: true,
@@ -1092,7 +1092,7 @@ parentPort.on('message', async (message) => {
   getPerformanceTrends() {
     const recentTimes = this.performanceProfile.processingTimes.slice(-20);
     const recentMemory = this.performanceProfile.memoryUsages.slice(-20);
-    
+
     return {
       processing_time_trend: this.calculateTrend(recentTimes),
       memory_usage_trend: this.calculateTrend(recentMemory.map(m => m.heapUsed)),
@@ -1107,15 +1107,15 @@ parentPort.on('message', async (message) => {
    */
   calculateTrend(values) {
     if (values.length < 5) return 'insufficient_data';
-    
+
     const firstHalf = values.slice(0, Math.floor(values.length / 2));
     const secondHalf = values.slice(Math.floor(values.length / 2));
-    
+
     const firstAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
     const secondAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
-    
+
     const percentChange = ((secondAvg - firstAvg) / firstAvg) * 100;
-    
+
     if (percentChange > 10) return 'increasing';
     if (percentChange < -10) return 'decreasing';
     return 'stable';
@@ -1126,7 +1126,7 @@ parentPort.on('message', async (message) => {
    */
   getOptimizationRecommendations() {
     const recommendations = [];
-    
+
     // Memory recommendations
     const memUsage = this.getCurrentMemoryUsage();
     if (memUsage.heap_used_mb > 256) {
@@ -1137,7 +1137,7 @@ parentPort.on('message', async (message) => {
         action: 'reduce_chunk_size'
       });
     }
-    
+
     // Cache recommendations
     const hitRate = this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses) || 0;
     if (hitRate < 0.3 && this.options.enableCaching) {
@@ -1148,11 +1148,11 @@ parentPort.on('message', async (message) => {
         action: 'optimize_cache'
       });
     }
-    
+
     // Worker recommendations
     const avgUtilization = this.performanceProfile.workerUtilization.slice(-10)
       .reduce((sum, util) => sum + util.utilization, 0) / 10 || 0;
-    
+
     if (avgUtilization > 0.9) {
       recommendations.push({
         type: 'workers',
@@ -1168,9 +1168,9 @@ parentPort.on('message', async (message) => {
         action: 'reduce_workers'
       });
     }
-    
+
     return recommendations;
   }
 }
 
-module.exports = PerformanceOptimizer; 
+module.exports = PerformanceOptimizer;

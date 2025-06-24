@@ -126,7 +126,7 @@ class ComponentRelationshipMapper {
 
     // Analyze alignment
     const alignment = this.analyzeAlignment(comp1.position, comp2.position);
-    
+
     if (alignment.horizontal_aligned && distances.center_to_center < 200) {
       relationship.subtype = 'horizontal_aligned';
       relationship.strength = 0.7 - (distances.center_to_center / 500);
@@ -195,10 +195,10 @@ class ComponentRelationshipMapper {
    */
   findFunctionalMatches(pattern, components, textElements) {
     const matches = [];
-    const primaryComponents = components.filter(comp => 
+    const primaryComponents = components.filter(comp =>
       pattern.primary === '*' || comp.type === pattern.primary
     );
-    const secondaryComponents = components.filter(comp => 
+    const secondaryComponents = components.filter(comp =>
       pattern.secondary === '*' || comp.type === pattern.secondary
     );
 
@@ -216,8 +216,8 @@ class ComponentRelationshipMapper {
             component2: secondary.id,
             type: 'functional',
             subtype: pattern.relationship,
-            confidence: confidence,
-            pattern: pattern,
+            confidence,
+            pattern,
             evidence: this.getFunctionalEvidence(primary, secondary, pattern, textElements)
           });
         }
@@ -260,7 +260,7 @@ class ComponentRelationshipMapper {
     const formRelationships = [];
     const inputs = components.filter(comp => comp.type === 'input');
     const buttons = components.filter(comp => comp.type === 'button');
-    const labels = textElements?.structured_text?.filter(text => 
+    const labels = textElements?.structured_text?.filter(text =>
       text.type === 'label' || text.text.endsWith(':')
     ) || [];
 
@@ -268,13 +268,13 @@ class ComponentRelationshipMapper {
     for (const input of inputs) {
       for (const button of buttons) {
         const distance = this.calculateDistances(input.position, button.position).center_to_center;
-        
+
         if (distance < 300) {
-          const isSubmitButton = button.text_content && 
+          const isSubmitButton = button.text_content &&
             /submit|send|save|register|login|sign|continue/i.test(button.text_content);
-          
+
           const confidence = isSubmitButton ? 0.8 : 0.5;
-          
+
           formRelationships.push({
             component1: input.id,
             component2: button.id,
@@ -312,7 +312,7 @@ class ComponentRelationshipMapper {
     for (let i = 0; i < inputs.length; i++) {
       for (let j = i + 1; j < inputs.length; j++) {
         const distance = this.calculateDistances(inputs[i].position, inputs[j].position).center_to_center;
-        
+
         if (distance < 150) {
           formRelationships.push({
             component1: inputs[i].id,
@@ -334,13 +334,13 @@ class ComponentRelationshipMapper {
    */
   async analyzeNavigationRelationships(components, textElements) {
     const navRelationships = [];
-    const navComponents = components.filter(comp => 
+    const navComponents = components.filter(comp =>
       comp.type === 'navigation' || comp.type === 'button'
     );
 
     // Group navigation elements
     const navGroups = this.groupNavigationElements(navComponents);
-    
+
     for (const group of navGroups) {
       if (group.length >= 2) {
         for (let i = 0; i < group.length; i++) {
@@ -403,7 +403,7 @@ class ComponentRelationshipMapper {
 
     // Analyze containment hierarchies
     for (const container of components) {
-      const contained = components.filter(comp => 
+      const contained = components.filter(comp =>
         comp.id !== container.id && this.isContained(comp.position, container.position)
       );
 
@@ -442,7 +442,7 @@ class ComponentRelationshipMapper {
 
     // Header to content relationships
     const headers = textElements?.structured_text?.filter(text => text.type === 'header') || [];
-    const contentElements = components.filter(comp => 
+    const contentElements = components.filter(comp =>
       comp.type === 'paragraph' || comp.type === 'text' || comp.type === 'card'
     );
 
@@ -468,7 +468,7 @@ class ComponentRelationshipMapper {
 
     // Image to caption relationships
     const images = components.filter(comp => comp.type === 'image');
-    const textBlocks = textElements?.structured_text?.filter(text => 
+    const textBlocks = textElements?.structured_text?.filter(text =>
       text.text.length > 10 && text.text.length < 200
     ) || [];
 
@@ -549,10 +549,10 @@ class ComponentRelationshipMapper {
    */
   analyzeGridRelationships(components, gridAnalysis) {
     const gridRelationships = [];
-    
+
     // Assign components to grid cells
     const gridAssignments = this.assignComponentsToGrid(components, gridAnalysis);
-    
+
     // Find grid neighbors
     for (const [compId, cell] of Object.entries(gridAssignments)) {
       for (const [otherCompId, otherCell] of Object.entries(gridAssignments)) {
@@ -588,12 +588,12 @@ class ComponentRelationshipMapper {
     }));
 
     const edges = [];
-    
+
     // This would be populated by all the relationship analysis above
     // For now, return the structure
     return {
-      nodes: nodes,
-      edges: edges,
+      nodes,
+      edges,
       node_count: nodes.length,
       edge_count: edges.length,
       density: edges.length / (nodes.length * (nodes.length - 1) / 2)
@@ -621,7 +621,7 @@ class ComponentRelationshipMapper {
     return {
       total_flows: flows.length,
       by_type: this.groupFlowsByType(flows),
-      flows: flows
+      flows
     };
   }
 
@@ -679,7 +679,7 @@ class ComponentRelationshipMapper {
     return {
       total_groups: groups.length,
       by_type: this.groupGroupsByType(groups),
-      groups: groups
+      groups
     };
   }
 
@@ -710,7 +710,7 @@ class ComponentRelationshipMapper {
         if (distance < 150) {
           group.components.push(other.id);
           used.add(other.id);
-          
+
           // Update group bounds
           group.bounds = this.expandBounds(group.bounds, other.position);
         }
@@ -784,10 +784,10 @@ class ComponentRelationshipMapper {
 
   analyzeAlignment(pos1, pos2) {
     const horizontalAligned = Math.abs(pos1.y - pos2.y) <= this.options.alignmentTolerance ||
-                             Math.abs((pos1.y + pos1.height/2) - (pos2.y + pos2.height/2)) <= this.options.alignmentTolerance;
-    
+                             Math.abs((pos1.y + pos1.height / 2) - (pos2.y + pos2.height / 2)) <= this.options.alignmentTolerance;
+
     const verticalAligned = Math.abs(pos1.x - pos2.x) <= this.options.alignmentTolerance ||
-                           Math.abs((pos1.x + pos1.width/2) - (pos2.x + pos2.width/2)) <= this.options.alignmentTolerance;
+                           Math.abs((pos1.x + pos1.width / 2) - (pos2.x + pos2.width / 2)) <= this.options.alignmentTolerance;
 
     return { horizontal_aligned: horizontalAligned, vertical_aligned: verticalAligned };
   }
@@ -800,15 +800,15 @@ class ComponentRelationshipMapper {
   }
 
   hasOverlap(pos1, pos2) {
-    return !(pos1.x + pos1.width < pos2.x || 
-             pos2.x + pos2.width < pos1.x || 
-             pos1.y + pos1.height < pos2.y || 
+    return !(pos1.x + pos1.width < pos2.x ||
+             pos2.x + pos2.width < pos1.x ||
+             pos1.y + pos1.height < pos2.y ||
              pos2.y + pos2.height < pos1.y);
   }
 
   getRelativePosition(pos1, pos2) {
-    const center1 = { x: pos1.x + pos1.width/2, y: pos1.y + pos1.height/2 };
-    const center2 = { x: pos2.x + pos2.width/2, y: pos2.y + pos2.height/2 };
+    const center1 = { x: pos1.x + pos1.width / 2, y: pos1.y + pos1.height / 2 };
+    const center2 = { x: pos2.x + pos2.width / 2, y: pos2.y + pos2.height / 2 };
 
     const dx = center2.x - center1.x;
     const dy = center2.y - center1.y;
@@ -822,7 +822,7 @@ class ComponentRelationshipMapper {
 
   identifySpatialPatterns(relationships) {
     const patterns = {};
-    
+
     relationships.forEach(rel => {
       patterns[rel.subtype] = (patterns[rel.subtype] || 0) + 1;
     });
@@ -834,7 +834,7 @@ class ComponentRelationshipMapper {
 
   groupRelationshipsByCategory(relationships) {
     const grouped = {};
-    
+
     relationships.forEach(rel => {
       const category = rel.subtype.split('_')[0];
       if (!grouped[category]) grouped[category] = [];
@@ -846,7 +846,7 @@ class ComponentRelationshipMapper {
 
   groupRelationshipsBySubtype(relationships) {
     const grouped = {};
-    
+
     relationships.forEach(rel => {
       if (!grouped[rel.subtype]) grouped[rel.subtype] = [];
       grouped[rel.subtype].push(rel);
@@ -867,17 +867,17 @@ class ComponentRelationshipMapper {
   calculateHierarchyLevel(component, allComponents) {
     let level = 0;
     let current = component;
-    
+
     while (true) {
-      const parent = allComponents.find(comp => 
+      const parent = allComponents.find(comp =>
         comp.id !== current.id && this.isContained(current.position, comp.position)
       );
-      
+
       if (!parent) break;
       level++;
       current = parent;
     }
-    
+
     return level;
   }
 
@@ -959,4 +959,4 @@ class ComponentRelationshipMapper {
   }
 }
 
-module.exports = ComponentRelationshipMapper; 
+module.exports = ComponentRelationshipMapper;

@@ -7,14 +7,14 @@ const { pipeline } = require('stream/promises');
 class StreamProcessor extends Transform {
   constructor(options = {}) {
     super({ objectMode: true });
-    
+
     this.options = {
       chunkSize: options.chunkSize || 1024 * 1024, // 1MB chunks
       maxConcurrent: options.maxConcurrent || 4,
       enableCompression: options.enableCompression !== false,
       ...options
     };
-    
+
     this.processingQueue = [];
     this.activeProcessing = 0;
   }
@@ -35,9 +35,9 @@ class StreamProcessor extends Transform {
     try {
       // Wait for available processing slot
       await this.waitForSlot();
-      
+
       this.activeProcessing++;
-      
+
       // Process the chunk based on its type
       let result;
       if (chunk.type === 'image') {
@@ -47,9 +47,9 @@ class StreamProcessor extends Transform {
       } else {
         result = await this.processGenericChunk(chunk);
       }
-      
+
       this.activeProcessing--;
-      
+
       return result;
     } catch (error) {
       this.activeProcessing--;
@@ -71,14 +71,14 @@ class StreamProcessor extends Transform {
    */
   async processImageChunk(chunk) {
     const { imageData, metadata, processingOptions } = chunk;
-    
+
     // Apply streaming optimizations
     const optimizedData = await this.optimizeImageData(imageData);
-    
+
     return {
       type: 'processed_image',
       data: optimizedData,
-      metadata: metadata,
+      metadata,
       processing_time: Date.now() - chunk.start_time,
       optimizations_applied: ['compression', 'chunking']
     };
@@ -90,7 +90,7 @@ class StreamProcessor extends Transform {
   async processBatchChunk(chunk) {
     const { images, batchOptions } = chunk;
     const results = [];
-    
+
     // Process images in parallel within the chunk
     const promises = images.map(async (image, index) => {
       try {
@@ -103,18 +103,18 @@ class StreamProcessor extends Transform {
       } catch (error) {
         return {
           type: 'error',
-          index: index,
+          index,
           error: error.message
         };
       }
     });
-    
+
     const chunkResults = await Promise.all(promises);
     results.push(...chunkResults);
-    
+
     return {
       type: 'processed_batch',
-      results: results,
+      results,
       batch_size: images.length,
       processing_time: Date.now() - chunk.start_time
     };
@@ -142,12 +142,12 @@ class StreamProcessor extends Transform {
 
     try {
       const Sharp = require('sharp');
-      
+
       // Apply streaming-friendly optimizations
       const optimized = await Sharp(imageData)
         .jpeg({ quality: 85, progressive: true })
         .toBuffer();
-      
+
       return optimized;
     } catch (error) {
       // Return original if optimization fails
@@ -167,7 +167,7 @@ class BatchStreamProcessor {
       enableProgressTracking: options.enableProgressTracking !== false,
       ...options
     };
-    
+
     this.processor = new StreamProcessor(options);
     this.stats = {
       processed: 0,
@@ -182,11 +182,11 @@ class BatchStreamProcessor {
   async processImages(images, progressCallback = null) {
     const startTime = Date.now();
     const results = [];
-    
+
     try {
       // Create batches
       const batches = this.createBatches(images);
-      
+
       // Process batches through stream
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -196,13 +196,13 @@ class BatchStreamProcessor {
           batchOptions: this.options,
           start_time: Date.now()
         };
-        
+
         const result = await this.processor.processChunk(batchChunk);
         results.push(result);
-        
+
         // Update statistics
         this.stats.processed += batch.length;
-        
+
         // Progress callback
         if (progressCallback) {
           progressCallback({
@@ -214,11 +214,11 @@ class BatchStreamProcessor {
           });
         }
       }
-      
+
       this.stats.totalTime = Date.now() - startTime;
-      
+
       return {
-        results: results,
+        results,
         statistics: this.stats,
         processing_method: 'stream_batch'
       };
@@ -232,12 +232,12 @@ class BatchStreamProcessor {
    */
   createBatches(images) {
     const batches = [];
-    
+
     for (let i = 0; i < images.length; i += this.options.batchSize) {
       const batch = images.slice(i, i + this.options.batchSize);
       batches.push(batch);
     }
-    
+
     return batches;
   }
 
@@ -264,7 +264,7 @@ class MemoryEfficientLoader {
       enableLazyLoading: options.enableLazyLoading !== false,
       ...options
     };
-    
+
     this.loadedImages = new Map();
     this.loadQueue = [];
     this.currentMemoryUsage = 0;
@@ -279,14 +279,14 @@ class MemoryEfficientLoader {
       if (this.loadedImages.has(imagePath)) {
         return this.loadedImages.get(imagePath);
       }
-      
+
       // Check memory usage before loading
       await this.ensureMemoryAvailable();
-      
+
       // Load image
       const fs = require('fs').promises;
       const imageBuffer = await fs.readFile(imagePath);
-      
+
       // Store in memory with metadata
       const imageData = {
         buffer: imageBuffer,
@@ -294,10 +294,10 @@ class MemoryEfficientLoader {
         loadedAt: Date.now(),
         accessCount: 0
       };
-      
+
       this.loadedImages.set(imagePath, imageData);
       this.currentMemoryUsage += imageBuffer.length;
-      
+
       return imageData;
     } catch (error) {
       throw new Error(`Failed to load image ${imagePath}: ${error.message}`);
@@ -325,14 +325,14 @@ class MemoryEfficientLoader {
   findLeastRecentlyUsed() {
     let lruPath = null;
     let oldestAccess = Date.now();
-    
+
     for (const [path, data] of this.loadedImages.entries()) {
       if (data.loadedAt < oldestAccess) {
         oldestAccess = data.loadedAt;
         lruPath = path;
       }
     }
-    
+
     return lruPath;
   }
 
@@ -351,10 +351,10 @@ class MemoryEfficientLoader {
    * Preload images for batch processing
    */
   async preloadImages(imagePaths) {
-    const preloadTasks = imagePaths.slice(0, this.options.preloadCount).map(path => 
+    const preloadTasks = imagePaths.slice(0, this.options.preloadCount).map(path =>
       this.loadImage(path).catch(error => ({ error: error.message, path }))
     );
-    
+
     const results = await Promise.all(preloadTasks);
     return results.filter(result => !result.error);
   }
@@ -368,7 +368,7 @@ class MemoryEfficientLoader {
       max_usage_mb: Math.round(this.options.maxMemoryUsage / 1024 / 1024),
       utilization: this.currentMemoryUsage / this.options.maxMemoryUsage,
       loaded_images: this.loadedImages.size,
-      average_image_size_kb: this.loadedImages.size > 0 
+      average_image_size_kb: this.loadedImages.size > 0
         ? Math.round((this.currentMemoryUsage / this.loadedImages.size) / 1024)
         : 0
     };
@@ -387,4 +387,4 @@ module.exports = {
   StreamProcessor,
   BatchStreamProcessor,
   MemoryEfficientLoader
-}; 
+};

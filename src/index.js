@@ -112,7 +112,7 @@ class ImageToText {
       // Step 2: OCR Text Extraction (with multi-language support)
       if (analysisOptions.extractText && this.config.enableOCR) {
         if (this.config.verbose) console.log(chalk.yellow('2. Extracting text with OCR...'));
-        
+
         if (this.config.enableMultiLanguageOCR) {
           result.text_extraction = await this.multiLanguageOCR.processImage(buffer, {
             language: this.config.ocrLanguage,
@@ -202,7 +202,7 @@ class ImageToText {
       // Input is a directory path
       const glob = require('glob');
       const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'];
-      
+
       for (const ext of imageExtensions) {
         const pattern = path.join(input, `**/*.${ext}`);
         const files = glob.sync(pattern, { nocase: true });
@@ -232,12 +232,12 @@ class ImageToText {
     for (let i = 0; i < imagePaths.length; i++) {
       const imagePath = imagePaths[i];
       const fileName = path.basename(imagePath, path.extname(imagePath));
-      
+
       try {
         console.log(chalk.blue(`[${i + 1}/${imagePaths.length}] Processing: ${path.basename(imagePath)}`));
-        
+
         const result = await this.analyze(imagePath, options);
-        
+
         // Save individual result if output directory is specified
         if (outputDir) {
           const outputFile = path.join(outputDir, `${fileName}.${options.format || 'json'}`);
@@ -248,7 +248,7 @@ class ImageToText {
           inputFile: imagePath,
           outputFile: outputDir ? path.join(outputDir, `${fileName}.${options.format || 'json'}`) : null,
           status: 'success',
-          result: result,
+          result,
           processing_time: result.analysis_statistics?.processing_time
         });
 
@@ -256,7 +256,7 @@ class ImageToText {
 
       } catch (error) {
         console.log(chalk.red(`✗ ${path.basename(imagePath)} failed: ${error.message}`));
-        
+
         results.push({
           inputFile: imagePath,
           status: 'error',
@@ -284,12 +284,12 @@ class ImageToText {
     const components = [];
     const visualElements = analysisResult.vision_analysis?.visual_elements || [];
     const textElements = analysisResult.text_extraction?.structured_text || [];
-    
+
     // Combine visual and text elements for classification
     for (const visualElement of visualElements) {
       // Find overlapping text
       const overlappingText = this.findOverlappingText(visualElement.position, textElements);
-      
+
       // Classify component
       const classification = await this.componentClassifier.classify(
         visualElement,
@@ -354,7 +354,7 @@ class ImageToText {
     // Analyze layout for framework suggestions
     if (analysisResult.layout_analysis) {
       const layout = analysisResult.layout_analysis;
-      
+
       if (layout.grid_detected) {
         recommendations.framework_suggestions.push('CSS Grid', 'Bootstrap Grid', 'Tailwind CSS Grid');
         recommendations.css_suggestions.push({
@@ -363,7 +363,7 @@ class ImageToText {
           reasoning: 'Grid layout detected'
         });
       }
-      
+
       if (layout.flexbox_patterns) {
         recommendations.framework_suggestions.push('Flexbox', 'Tailwind CSS Flex');
         recommendations.css_suggestions.push({
@@ -377,11 +377,11 @@ class ImageToText {
     // Component-based recommendations
     if (analysisResult.components) {
       const componentTypes = [...new Set(analysisResult.components.map(c => c.type))];
-      
+
       if (componentTypes.includes('button')) {
         recommendations.implementation_notes.push('Use semantic <button> elements for interactive components');
       }
-      
+
       if (componentTypes.includes('navigation')) {
         recommendations.implementation_notes.push('Implement navigation with <nav> and proper ARIA labels');
         recommendations.html_structure = this.generateHTMLStructure(analysisResult.components);
@@ -391,11 +391,11 @@ class ImageToText {
     // Color-based accessibility recommendations
     if (analysisResult.color_analysis?.accessibility) {
       const accessibility = analysisResult.color_analysis.accessibility;
-      
+
       if (!accessibility.wcag_aa_compliant) {
         recommendations.accessibility_notes.push('Improve color contrast for WCAG AA compliance');
       }
-      
+
       if (!accessibility.wcag_aaa_compliant) {
         recommendations.accessibility_notes.push('Consider enhancing contrast for WCAG AAA compliance');
       }
@@ -412,10 +412,10 @@ class ImageToText {
    */
   generateHTMLStructure(components) {
     const structure = [];
-    
+
     // Sort components by position (top to bottom)
     const sortedComponents = components.sort((a, b) => a.position.y - b.position.y);
-    
+
     for (const component of sortedComponents) {
       switch (component.type) {
         case 'header':
@@ -434,7 +434,7 @@ class ImageToText {
           break;
       }
     }
-    
+
     return structure.join('\n');
   }
 
@@ -444,7 +444,7 @@ class ImageToText {
   detectDesignPatterns(analysisResult) {
     const patterns = [];
     const components = analysisResult.components || [];
-    
+
     // Header pattern
     const hasHeader = components.some(c => c.type === 'header');
     const hasNavigation = components.some(c => c.type === 'navigation');
@@ -455,14 +455,14 @@ class ImageToText {
         description: 'Standard website header pattern with navigation'
       });
     }
-    
+
     // Card layout pattern
     const rectangles = analysisResult.vision_analysis?.shapes?.rectangles || [];
     if (rectangles.length >= 3) {
-      const similarSized = rectangles.filter(r => 
+      const similarSized = rectangles.filter(r =>
         Math.abs(r.aspect_ratio - rectangles[0].aspect_ratio) < 0.3
       );
-      
+
       if (similarSized.length >= 3) {
         patterns.push({
           name: 'Card Layout',
@@ -471,7 +471,7 @@ class ImageToText {
         });
       }
     }
-    
+
     return patterns;
   }
 
@@ -536,7 +536,7 @@ class ImageToText {
     if (!bytes) return 'Unknown';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`;
   }
 
   /**
@@ -644,7 +644,7 @@ class ImageToText {
     }
 
     return await this.performanceOptimizer.optimizeBatchProcessing(
-      imageInputs, 
+      imageInputs,
       { ...options, analyzer: this },
       progressCallback
     );
@@ -701,4 +701,4 @@ module.exports = {
   displayResult,
   validateImage,
   validateOptions
-}; 
+};

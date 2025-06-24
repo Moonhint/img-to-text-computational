@@ -21,7 +21,7 @@ class ColorAnalyzer {
     try {
       // Get image metadata
       const metadata = await sharp(imageBuffer).metadata();
-      
+
       // Get raw pixel data
       const { data, info } = await sharp(imageBuffer)
         .raw()
@@ -53,15 +53,15 @@ class ColorAnalyzer {
   async extractColorPalette(pixelData, info) {
     const pixels = [];
     const step = info.channels;
-    
+
     // Sample pixels (every 4th pixel for performance on large images)
     const sampleRate = Math.max(1, Math.floor(info.width * info.height / 100000));
-    
+
     for (let i = 0; i < pixelData.length; i += step * sampleRate) {
       const r = pixelData[i];
       const g = pixelData[i + 1];
       const b = pixelData[i + 2];
-      
+
       if (r !== undefined && g !== undefined && b !== undefined) {
         pixels.push([r, g, b]);
       }
@@ -69,22 +69,22 @@ class ColorAnalyzer {
 
     // Quantize colors to reduce palette size
     const quantizedColors = colorQuantize(pixels, this.options.maxColors);
-    
+
     // Count occurrences of each color
     const colorCounts = this.countColors(pixelData, info, quantizedColors);
-    
+
     // Create palette with metadata
     const palette = quantizedColors.map((color, index) => {
       const hex = this.rgbToHex(color[0], color[1], color[2]);
       const count = colorCounts[index] || 0;
       const percentage = (count / (info.width * info.height)) * 100;
-      
+
       return {
         rgb: { r: color[0], g: color[1], b: color[2] },
-        hex: hex,
+        hex,
         hsl: this.rgbToHsl(color[0], color[1], color[2]),
-        count: count,
-        percentage: percentage,
+        count,
+        percentage,
         name: this.getColorName(color[0], color[1], color[2])
       };
     });
@@ -99,34 +99,34 @@ class ColorAnalyzer {
    */
   async findDominantColors(pixelData, info) {
     const palette = await this.extractColorPalette(pixelData, info);
-    
+
     // Get top 5 most dominant colors
     const dominant = palette.slice(0, 5);
-    
+
     // Classify colors by usage
     const primary = dominant[0];
     const secondary = dominant[1] || primary;
-    const accent = dominant.find(color => 
-      this.getColorBrightness(color.rgb) > 0.7 || 
+    const accent = dominant.find(color =>
+      this.getColorBrightness(color.rgb) > 0.7 ||
       this.getColorSaturation(color.hsl) > 0.8
     ) || dominant[2];
 
     // Find background color (usually most common neutral)
-    const background = dominant.find(color => 
+    const background = dominant.find(color =>
       this.getColorSaturation(color.hsl) < 0.2 &&
       (this.getColorBrightness(color.rgb) > 0.8 || this.getColorBrightness(color.rgb) < 0.2)
     ) || primary;
 
     // Find text colors (high contrast with background)
-    const textColors = dominant.filter(color => 
+    const textColors = dominant.filter(color =>
       this.calculateContrast(color.rgb, background.rgb) >= this.options.contrastThreshold
     );
 
     return {
-      primary: primary,
-      secondary: secondary,
-      accent: accent,
-      background: background,
+      primary,
+      secondary,
+      accent,
+      background,
       text_colors: textColors,
       all_dominant: dominant
     };
@@ -148,12 +148,12 @@ class ColorAnalyzer {
       const r = pixelData[i];
       const g = pixelData[i + 1];
       const b = pixelData[i + 2];
-      
+
       if (r !== undefined && g !== undefined && b !== undefined) {
         rValues.push(r);
         gValues.push(g);
         bValues.push(b);
-        
+
         brightnessValues.push(this.getColorBrightness({ r, g, b }));
         const hsl = this.rgbToHsl(r, g, b);
         saturationValues.push(hsl.s);
@@ -199,7 +199,7 @@ class ColorAnalyzer {
   async analyzeColorHarmony(pixelData, info) {
     const palette = await this.extractColorPalette(pixelData, info);
     const dominant = palette.slice(0, 8);
-    
+
     const harmony = {
       scheme_type: this.detectColorScheme(dominant),
       temperature: this.analyzeColorTemperature(dominant),
@@ -215,7 +215,7 @@ class ColorAnalyzer {
    */
   async analyzeAccessibility(pixelData, info) {
     const dominant = await this.findDominantColors(pixelData, info);
-    
+
     const accessibility = {
       contrast_ratios: [],
       wcag_aa_compliant: false,
@@ -224,7 +224,7 @@ class ColorAnalyzer {
     };
 
     // Check contrast between potential text and background colors
-    const textCandidates = dominant.all_dominant.filter(color => 
+    const textCandidates = dominant.all_dominant.filter(color =>
       this.getColorBrightness(color.rgb) < 0.3 || this.getColorBrightness(color.rgb) > 0.7
     );
 
@@ -235,7 +235,7 @@ class ColorAnalyzer {
     for (const textColor of textCandidates) {
       for (const bgColor of backgroundCandidates) {
         const contrast = this.calculateContrast(textColor.rgb, bgColor.rgb);
-        
+
         accessibility.contrast_ratios.push({
           text_color: textColor.hex,
           background_color: bgColor.hex,
@@ -269,7 +269,7 @@ class ColorAnalyzer {
       const r = pixelData[i];
       const g = pixelData[i + 1];
       const b = pixelData[i + 2];
-      
+
       if (r !== undefined && g !== undefined && b !== undefined) {
         // Find closest quantized color
         const closestIndex = this.findClosestColorIndex([r, g, b], quantizedColors);
@@ -312,7 +312,7 @@ class ColorAnalyzer {
    * Convert RGB to Hex
    */
   rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    return `#${  ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }
 
   /**
@@ -340,7 +340,7 @@ class ColorAnalyzer {
       h /= 6;
     }
 
-    return { h: h * 360, s: s, l: l };
+    return { h: h * 360, s, l };
   }
 
   /**
@@ -363,10 +363,10 @@ class ColorAnalyzer {
   calculateContrast(color1, color2) {
     const l1 = this.getLuminance(color1);
     const l2 = this.getLuminance(color2);
-    
+
     const bright = Math.max(l1, l2);
     const dark = Math.min(l1, l2);
-    
+
     return (bright + 0.05) / (dark + 0.05);
   }
 
@@ -390,32 +390,32 @@ class ColorAnalyzer {
    */
   detectColorScheme(colors) {
     if (colors.length < 2) return 'monochromatic';
-    
+
     const hues = colors.map(color => color.hsl.h);
     const saturations = colors.map(color => color.hsl.s);
-    
+
     // Check for monochromatic (similar hues)
     const hueRange = Math.max(...hues) - Math.min(...hues);
     if (hueRange < 30) return 'monochromatic';
-    
+
     // Check for analogous (adjacent hues)
     if (hueRange < 90) return 'analogous';
-    
+
     // Check for complementary (opposite hues)
-    const hasComplementary = hues.some(h1 => 
+    const hasComplementary = hues.some(h1 =>
       hues.some(h2 => Math.abs(h1 - h2) > 150 && Math.abs(h1 - h2) < 210)
     );
     if (hasComplementary) return 'complementary';
-    
+
     // Check for triadic (120° apart)
-    const hasTriadic = hues.some(h1 => 
-      hues.some(h2 => hues.some(h3 => 
+    const hasTriadic = hues.some(h1 =>
+      hues.some(h2 => hues.some(h3 =>
         Math.abs(h1 - h2) > 110 && Math.abs(h1 - h2) < 130 &&
         Math.abs(h2 - h3) > 110 && Math.abs(h2 - h3) < 130
       ))
     );
     if (hasTriadic) return 'triadic';
-    
+
     return 'complex';
   }
 
@@ -425,7 +425,7 @@ class ColorAnalyzer {
   analyzeColorTemperature(colors) {
     let warmCount = 0;
     let coolCount = 0;
-    
+
     colors.forEach(color => {
       const hue = color.hsl.h;
       if ((hue >= 0 && hue <= 60) || (hue >= 300 && hue <= 360)) {
@@ -434,7 +434,7 @@ class ColorAnalyzer {
         coolCount++; // Blue, cyan
       }
     });
-    
+
     if (warmCount > coolCount * 1.5) return 'warm';
     if (coolCount > warmCount * 1.5) return 'cool';
     return 'neutral';
@@ -448,7 +448,7 @@ class ColorAnalyzer {
     const minBrightness = Math.min(...brightnesses);
     const maxBrightness = Math.max(...brightnesses);
     const range = maxBrightness - minBrightness;
-    
+
     if (range > 0.7) return 'high';
     if (range > 0.4) return 'medium';
     return 'low';
@@ -459,23 +459,23 @@ class ColorAnalyzer {
    */
   findColorRelationships(colors) {
     const relationships = [];
-    
+
     for (let i = 0; i < colors.length; i++) {
       for (let j = i + 1; j < colors.length; j++) {
         const color1 = colors[i];
         const color2 = colors[j];
         const relationship = this.getColorRelationship(color1.hsl, color2.hsl);
-        
+
         if (relationship !== 'unrelated') {
           relationships.push({
             color1: color1.hex,
             color2: color2.hex,
-            relationship: relationship
+            relationship
           });
         }
       }
     }
-    
+
     return relationships;
   }
 
@@ -486,13 +486,13 @@ class ColorAnalyzer {
     const hueDiff = Math.abs(hsl1.h - hsl2.h);
     const satDiff = Math.abs(hsl1.s - hsl2.s);
     const lightDiff = Math.abs(hsl1.l - hsl2.l);
-    
+
     if (hueDiff < 15 && satDiff < 0.2 && lightDiff < 0.2) return 'identical';
     if (hueDiff < 30) return 'analogous';
     if (hueDiff > 150 && hueDiff < 210) return 'complementary';
     if (Math.abs(hueDiff - 120) < 15 || Math.abs(hueDiff - 240) < 15) return 'triadic';
     if (Math.abs(hueDiff - 90) < 15 || Math.abs(hueDiff - 270) < 15) return 'square';
-    
+
     return 'unrelated';
   }
 
@@ -503,10 +503,10 @@ class ColorAnalyzer {
     const rVariance = rStats.variance();
     const gVariance = gStats.variance();
     const bVariance = bStats.variance();
-    
+
     const avgVariance = (rVariance + gVariance + bVariance) / 3;
     const maxVariance = 255 * 255; // Maximum possible variance
-    
+
     return avgVariance / maxVariance; // Normalized 0-1
   }
 
@@ -516,7 +516,7 @@ class ColorAnalyzer {
   getColorName(r, g, b) {
     const hsl = this.rgbToHsl(r, g, b);
     const { h, s, l } = hsl;
-    
+
     // Very basic color naming
     if (s < 0.1) {
       if (l > 0.9) return 'white';
@@ -525,7 +525,7 @@ class ColorAnalyzer {
       if (l < 0.3) return 'dark_gray';
       return 'gray';
     }
-    
+
     if (h < 15 || h > 345) return 'red';
     if (h < 45) return 'orange';
     if (h < 75) return 'yellow';
@@ -533,9 +533,9 @@ class ColorAnalyzer {
     if (h < 210) return 'blue';
     if (h < 270) return 'purple';
     if (h < 330) return 'pink';
-    
+
     return 'unknown';
   }
 }
 
-module.exports = ColorAnalyzer; 
+module.exports = ColorAnalyzer;

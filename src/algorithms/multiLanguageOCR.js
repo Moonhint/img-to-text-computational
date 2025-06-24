@@ -13,7 +13,7 @@ class MultiLanguageOCR {
 
     // Language-specific configurations
     this.languageConfigs = this.initializeLanguageConfigs();
-    
+
     // Initialize workers for different languages
     this.workers = new Map();
     this.workerPromises = new Map();
@@ -37,7 +37,7 @@ class MultiLanguageOCR {
           capitalizeProperNouns: false
         }
       },
-      
+
       // Spanish
       spa: {
         tesseractOptions: {
@@ -51,7 +51,7 @@ class MultiLanguageOCR {
           handleAccents: true
         }
       },
-      
+
       // French
       fra: {
         tesseractOptions: {
@@ -66,7 +66,7 @@ class MultiLanguageOCR {
           fixCedillas: true
         }
       },
-      
+
       // German
       deu: {
         tesseractOptions: {
@@ -81,7 +81,7 @@ class MultiLanguageOCR {
           fixCompoundWords: true
         }
       },
-      
+
       // Chinese Simplified
       chi_sim: {
         tesseractOptions: {
@@ -95,7 +95,7 @@ class MultiLanguageOCR {
           handleVerticalText: true
         }
       },
-      
+
       // Chinese Traditional
       chi_tra: {
         tesseractOptions: {
@@ -109,7 +109,7 @@ class MultiLanguageOCR {
           handleVerticalText: true
         }
       },
-      
+
       // Japanese
       jpn: {
         tesseractOptions: {
@@ -124,7 +124,7 @@ class MultiLanguageOCR {
           separateHiraganaKatakana: true
         }
       },
-      
+
       // Korean
       kor: {
         tesseractOptions: {
@@ -138,7 +138,7 @@ class MultiLanguageOCR {
           handleHangul: true
         }
       },
-      
+
       // Arabic
       ara: {
         tesseractOptions: {
@@ -153,7 +153,7 @@ class MultiLanguageOCR {
           fixArabicShaping: true
         }
       },
-      
+
       // Russian
       rus: {
         tesseractOptions: {
@@ -167,7 +167,7 @@ class MultiLanguageOCR {
           handleCyrillic: true
         }
       },
-      
+
       // Hindi
       hin: {
         tesseractOptions: {
@@ -193,7 +193,7 @@ class MultiLanguageOCR {
   async processImage(imageInput, options = {}) {
     try {
       const processingOptions = { ...this.options, ...options };
-      
+
       let detectedLanguage = processingOptions.language || this.options.defaultLanguage;
       let ocrResults = null;
       let languageDetectionResults = null;
@@ -210,11 +210,11 @@ class MultiLanguageOCR {
       // If confidence is low, try fallback languages
       if (ocrResults.confidence < this.options.confidenceThreshold) {
         const fallbackResults = await this.tryFallbackLanguages(
-          imageInput, 
-          detectedLanguage, 
+          imageInput,
+          detectedLanguage,
           processingOptions
         );
-        
+
         if (fallbackResults && fallbackResults.confidence > ocrResults.confidence) {
           ocrResults = fallbackResults;
           detectedLanguage = fallbackResults.language;
@@ -255,7 +255,7 @@ class MultiLanguageOCR {
   async detectLanguage(imageInput) {
     try {
       const startTime = Date.now();
-      
+
       // Use multiple detection methods
       const detectionMethods = [
         this.detectLanguageByScript(imageInput),
@@ -264,13 +264,13 @@ class MultiLanguageOCR {
       ];
 
       const results = await Promise.all(detectionMethods);
-      
+
       // Combine results with confidence weighting
       const languageScores = {};
-      
+
       results.forEach((result, index) => {
         const weight = [0.4, 0.4, 0.2][index]; // Script detection gets highest weight
-        
+
         for (const [lang, score] of Object.entries(result.scores)) {
           languageScores[lang] = (languageScores[lang] || 0) + (score * weight);
         }
@@ -308,7 +308,7 @@ class MultiLanguageOCR {
       // Quick OCR with script detection
       const worker = await this.getWorker('osd'); // Orientation and Script Detection
       const result = await worker.detect(imageInput);
-      
+
       const scriptMappings = {
         'Latin': ['eng', 'spa', 'fra', 'deu', 'ita', 'por'],
         'Han': ['chi_sim', 'chi_tra', 'jpn'],
@@ -321,11 +321,11 @@ class MultiLanguageOCR {
       };
 
       const scores = {};
-      
+
       if (result.script && scriptMappings[result.script]) {
         const languages = scriptMappings[result.script];
         const baseScore = result.confidence || 0.7;
-        
+
         languages.forEach((lang, index) => {
           scores[lang] = baseScore - (index * 0.1);
         });
@@ -334,7 +334,7 @@ class MultiLanguageOCR {
       return {
         method: 'script_detection',
         detected_script: result.script,
-        scores: scores,
+        scores,
         confidence: result.confidence || 0
       };
     } catch (error) {
@@ -361,7 +361,7 @@ class MultiLanguageOCR {
               tessedit_pageseg_mode: Tesseract.PSM.AUTO,
               tessedit_char_confidence: '1'
             });
-            
+
             return {
               language: lang,
               confidence: result.data.confidence / 100,
@@ -385,7 +385,7 @@ class MultiLanguageOCR {
 
       return {
         method: 'frequency_analysis',
-        scores: scores,
+        scores,
         test_results: results
       };
     } catch (error) {
@@ -453,16 +453,16 @@ class MultiLanguageOCR {
       };
 
       const scores = {};
-      
+
       for (const [lang, langPatterns] of Object.entries(patterns)) {
         let score = 0;
         let totalMatches = 0;
-        
+
         langPatterns.forEach(pattern => {
           const matches = text.match(pattern) || [];
           totalMatches += matches.length;
         });
-        
+
         // Normalize score by text length
         score = totalMatches / Math.max(text.length / 100, 1);
         scores[lang] = Math.min(score, 1);
@@ -470,7 +470,7 @@ class MultiLanguageOCR {
 
       return {
         method: 'pattern_matching',
-        scores: scores,
+        scores,
         text_sample: text.substring(0, 200)
       };
     } catch (error) {
@@ -497,9 +497,9 @@ class MultiLanguageOCR {
       };
 
       const result = await worker.recognize(imageInput, tesseractOptions);
-      
+
       return {
-        language: language,
+        language,
         text: result.data.text,
         confidence: result.data.confidence / 100,
         words: result.data.words,
@@ -522,15 +522,15 @@ class MultiLanguageOCR {
 
     for (const language of fallbackLanguages) {
       if (attempts >= this.options.maxRetries) break;
-      
+
       try {
         const result = await this.performOCR(imageInput, language, options);
         attempts++;
-        
+
         if (!bestResult || result.confidence > bestResult.confidence) {
           bestResult = { ...result, fallback_attempts: attempts };
         }
-        
+
         // If we get good confidence, stop trying
         if (result.confidence > this.options.confidenceThreshold) {
           break;
@@ -551,7 +551,7 @@ class MultiLanguageOCR {
     try {
       const config = this.languageConfigs[language] || this.languageConfigs.eng;
       const postProcessing = config.postProcessing;
-      
+
       let processedText = ocrResults.text;
       const appliedProcessing = [];
 
@@ -647,7 +647,7 @@ class MultiLanguageOCR {
     };
 
     const errors = commonErrors[language] || commonErrors.eng;
-    
+
     let processedText = text;
     errors.forEach(([pattern, replacement]) => {
       processedText = processedText.replace(pattern, replacement);
@@ -676,7 +676,7 @@ class MultiLanguageOCR {
 
     const fixes = accentFixes[language] || [];
     let processedText = text;
-    
+
     fixes.forEach(([pattern, replacement]) => {
       processedText = processedText.replace(pattern, replacement);
     });
@@ -728,7 +728,7 @@ class MultiLanguageOCR {
     return words.map(word => ({
       ...word,
       text: this.processWordText(word.text, language),
-      language: language,
+      language,
       confidence: word.confidence / 100
     }));
   }
@@ -778,7 +778,7 @@ class MultiLanguageOCR {
     return lines.map(line => ({
       ...line,
       text: this.processLineText(line.text, language),
-      language: language,
+      language,
       confidence: line.confidence / 100
     }));
   }
@@ -796,9 +796,9 @@ class MultiLanguageOCR {
    */
   createStructuredText(words, lines, language) {
     const structuredText = [];
-    
+
     lines.forEach((line, index) => {
-      const lineWords = words.filter(word => 
+      const lineWords = words.filter(word =>
         word.bbox && line.bbox &&
         word.bbox.y0 >= line.bbox.y0 - 5 &&
         word.bbox.y1 <= line.bbox.y1 + 5
@@ -815,7 +815,7 @@ class MultiLanguageOCR {
           height: (line.bbox?.y1 || 0) - (line.bbox?.y0 || 0)
         },
         confidence: line.confidence,
-        language: language,
+        language,
         words: lineWords,
         font_info: {
           estimated_size: this.estimateFontSize(line.bbox),
@@ -870,7 +870,7 @@ class MultiLanguageOCR {
    */
   async performLanguageSpecificAnalysis(text, language) {
     const analysis = {
-      language: language,
+      language,
       character_count: text.length,
       word_count: 0,
       sentence_count: 0,
@@ -952,11 +952,11 @@ class MultiLanguageOCR {
 
     const workerPromise = this.createWorker(language);
     this.workerPromises.set(language, workerPromise);
-    
+
     const worker = await workerPromise;
     this.workers.set(language, worker);
     this.workerPromises.delete(language);
-    
+
     return worker;
   }
 
@@ -999,4 +999,4 @@ class MultiLanguageOCR {
   }
 }
 
-module.exports = MultiLanguageOCR; 
+module.exports = MultiLanguageOCR;

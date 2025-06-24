@@ -21,7 +21,7 @@ class VisionAnalyzer {
     try {
       // Convert image buffer to OpenCV Mat
       const mat = await this.bufferToMat(imageBuffer);
-      
+
       const analysis = {
         shapes: await this.detectShapes(mat),
         edges: await this.detectEdges(mat),
@@ -32,9 +32,9 @@ class VisionAnalyzer {
 
       // Combine all detected elements
       analysis.visual_elements = this.combineVisualElements(analysis);
-      
+
       mat.delete(); // Clean up memory
-      
+
       return analysis;
     } catch (error) {
       throw new Error(`Vision analysis failed: ${error.message}`);
@@ -66,10 +66,10 @@ class VisionAnalyzer {
 
     // Detect rectangles
     shapes.rectangles = this.detectRectangles(gray);
-    
+
     // Detect circles
     shapes.circles = this.detectCircles(gray);
-    
+
     // Detect other polygons
     shapes.polygons = this.detectPolygons(gray);
 
@@ -82,7 +82,7 @@ class VisionAnalyzer {
    */
   detectRectangles(grayMat) {
     const rectangles = [];
-    
+
     // Apply Gaussian blur to reduce noise
     const blurred = new cv.Mat();
     cv.GaussianBlur(grayMat, blurred, new cv.Size(5, 5), 0);
@@ -100,10 +100,10 @@ class VisionAnalyzer {
     for (let i = 0; i < contours.size(); i++) {
       const contour = contours.get(i);
       const area = cv.contourArea(contour);
-      
+
       if (area > this.options.minContourArea && area < this.options.maxContourArea) {
         const rect = cv.boundingRect(contour);
-        
+
         // Check if contour is rectangular
         if (this.isRectangular(contour, rect)) {
           rectangles.push({
@@ -114,13 +114,13 @@ class VisionAnalyzer {
               width: rect.width,
               height: rect.height
             },
-            area: area,
+            area,
             aspect_ratio: rect.width / rect.height,
             confidence: this.calculateRectangleConfidence(contour, rect)
           });
         }
       }
-      
+
       contour.delete();
     }
 
@@ -140,7 +140,7 @@ class VisionAnalyzer {
     const contourArea = cv.contourArea(contour);
     const rectArea = rect.width * rect.height;
     const ratio = Math.abs(contourArea - rectArea) / rectArea;
-    
+
     return ratio < this.options.rectangularityThreshold;
   }
 
@@ -151,7 +151,7 @@ class VisionAnalyzer {
     const contourArea = cv.contourArea(contour);
     const rectArea = rect.width * rect.height;
     const areaRatio = contourArea / rectArea;
-    
+
     // Higher confidence for more rectangular shapes
     return Math.max(0, 1 - Math.abs(1 - areaRatio));
   }
@@ -161,15 +161,15 @@ class VisionAnalyzer {
    */
   detectCircles(grayMat) {
     const circles = [];
-    
+
     try {
       // Apply HoughCircles to detect circles
       const circlesMat = new cv.Mat();
       cv.HoughCircles(
-        grayMat, 
-        circlesMat, 
-        cv.HOUGH_GRADIENT, 
-        1, 
+        grayMat,
+        circlesMat,
+        cv.HOUGH_GRADIENT,
+        1,
         50, // min distance between circles
         50, // higher threshold for edge detection
         30, // accumulator threshold
@@ -182,7 +182,7 @@ class VisionAnalyzer {
         const x = circlesMat.data32F[i * 3];
         const y = circlesMat.data32F[i * 3 + 1];
         const radius = circlesMat.data32F[i * 3 + 2];
-        
+
         circles.push({
           type: 'circle',
           position: {
@@ -211,7 +211,7 @@ class VisionAnalyzer {
    */
   detectPolygons(grayMat) {
     const polygons = [];
-    
+
     // Apply threshold
     const thresh = new cv.Mat();
     cv.threshold(grayMat, thresh, 127, 255, cv.THRESH_BINARY);
@@ -225,35 +225,35 @@ class VisionAnalyzer {
     for (let i = 0; i < contours.size(); i++) {
       const contour = contours.get(i);
       const area = cv.contourArea(contour);
-      
+
       if (area > this.options.minContourArea) {
         // Approximate contour to polygon
         const approx = new cv.Mat();
         const epsilon = 0.02 * cv.arcLength(contour, true);
         cv.approxPolyDP(contour, approx, epsilon, true);
-        
+
         const vertices = approx.rows;
-        
+
         if (vertices >= 3 && vertices <= 10) { // Valid polygon
           const rect = cv.boundingRect(contour);
-          
+
           polygons.push({
             type: 'polygon',
-            vertices: vertices,
+            vertices,
             position: {
               x: rect.x,
               y: rect.y,
               width: rect.width,
               height: rect.height
             },
-            area: area,
+            area,
             confidence: this.calculatePolygonConfidence(vertices, area)
           });
         }
-        
+
         approx.delete();
       }
-      
+
       contour.delete();
     }
 
@@ -335,14 +335,14 @@ class VisionAnalyzer {
 
       if (area > this.options.minContourArea) {
         contourData.push({
-          area: area,
-          perimeter: perimeter,
+          area,
+          perimeter,
           position: rect,
           aspect_ratio: rect.width / rect.height,
           solidity: area / (rect.width * rect.height)
         });
       }
-      
+
       contour.delete();
     }
 
@@ -381,8 +381,8 @@ class VisionAnalyzer {
         type: 'line',
         start: { x: x1, y: y1 },
         end: { x: x2, y: y2 },
-        length: length,
-        angle: angle,
+        length,
+        angle,
         orientation: this.classifyLineOrientation(angle)
       });
     }
@@ -467,4 +467,4 @@ class VisionAnalyzer {
   }
 }
 
-module.exports = VisionAnalyzer; 
+module.exports = VisionAnalyzer;

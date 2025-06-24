@@ -29,7 +29,7 @@ class ImageProcessor {
 
       // Get file stats
       const stats = await fs.stat(imagePath);
-      
+
       // Validate file type
       const mimeType = mime.lookup(imagePath);
       if (!this.isSupportedImageType(mimeType)) {
@@ -38,19 +38,19 @@ class ImageProcessor {
 
       // Load image with Sharp
       let image = sharp(imagePath);
-      
+
       // Get initial metadata
       const metadata = await image.metadata();
-      
+
       // Apply preprocessing
       image = await this.preprocess(image, metadata);
-      
+
       // Convert to buffer
       const buffer = await image.toBuffer();
-      
+
       // Get final metadata
       const finalMetadata = await sharp(buffer).metadata();
-      
+
       return {
         buffer,
         metadata: {
@@ -80,8 +80,8 @@ class ImageProcessor {
     // Resize if too large
     if (metadata.width > this.options.maxWidth || metadata.height > this.options.maxHeight) {
       processed = processed.resize(
-        this.options.maxWidth, 
-        this.options.maxHeight, 
+        this.options.maxWidth,
+        this.options.maxHeight,
         {
           fit: 'inside',
           withoutEnlargement: true
@@ -115,14 +115,14 @@ class ImageProcessor {
   isSupportedImageType(mimeType) {
     const supportedTypes = [
       'image/jpeg',
-      'image/jpg', 
+      'image/jpg',
       'image/png',
       'image/gif',
       'image/bmp',
       'image/tiff',
       'image/webp'
     ];
-    
+
     return supportedTypes.includes(mimeType);
   }
 
@@ -288,14 +288,14 @@ class ImageProcessor {
       const metadata = await sharp(imageBuffer).metadata();
       const cellWidth = Math.floor(metadata.width / grid.cols);
       const cellHeight = Math.floor(metadata.height / grid.rows);
-      
+
       const regions = [];
 
       for (let row = 0; row < grid.rows; row++) {
         for (let col = 0; col < grid.cols; col++) {
           const x = col * cellWidth;
           const y = row * cellHeight;
-          
+
           const regionBuffer = await this.extractRegion(imageBuffer, {
             x,
             y,
@@ -326,7 +326,7 @@ class ImageProcessor {
     try {
       const metadata = await sharp(imageBuffer).metadata();
       const stats = await sharp(imageBuffer).stats();
-      
+
       const quality = {
         resolution: {
           width: metadata.width,
@@ -396,4 +396,4 @@ class ImageProcessor {
   }
 }
 
-module.exports = ImageProcessor; 
+module.exports = ImageProcessor;

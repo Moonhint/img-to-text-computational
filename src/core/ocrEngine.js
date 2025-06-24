@@ -85,7 +85,7 @@ class OCREngine {
    */
   classifyTextType(text) {
     const trimmed = text.trim();
-    
+
     // Check for common UI patterns
     if (this.isNavigationText(trimmed)) return 'navigation';
     if (this.isButtonText(trimmed)) return 'button';
@@ -93,11 +93,11 @@ class OCREngine {
     if (this.isLabelText(trimmed)) return 'label';
     if (this.isLinkText(trimmed)) return 'link';
     if (this.isFormText(trimmed)) return 'form';
-    
+
     // Default classifications
     if (trimmed.length < 50) return 'short_text';
     if (trimmed.length > 200) return 'paragraph';
-    
+
     return 'text';
   }
 
@@ -106,17 +106,17 @@ class OCREngine {
    */
   isNavigationText(text) {
     const navKeywords = ['home', 'about', 'contact', 'services', 'products', 'menu'];
-    const hasNavKeywords = navKeywords.some(keyword => 
+    const hasNavKeywords = navKeywords.some(keyword =>
       text.toLowerCase().includes(keyword)
     );
-    
+
     // Check for pipe-separated navigation
     const hasPipeSeparation = text.includes('|');
-    
+
     // Check for multiple short words (typical navigation pattern)
     const words = text.split(/\s+/);
     const hasMultipleShortWords = words.length >= 3 && words.every(word => word.length < 15);
-    
+
     return hasNavKeywords || hasPipeSeparation || hasMultipleShortWords;
   }
 
@@ -128,9 +128,9 @@ class OCREngine {
       'click', 'submit', 'send', 'buy', 'purchase', 'download', 'login', 'signup',
       'register', 'subscribe', 'learn more', 'get started', 'try now', 'book now'
     ];
-    
+
     const lowerText = text.toLowerCase();
-    return buttonKeywords.some(keyword => lowerText.includes(keyword)) || 
+    return buttonKeywords.some(keyword => lowerText.includes(keyword)) ||
            (text.length < 30 && /^[A-Z]/.test(text));
   }
 
@@ -141,11 +141,11 @@ class OCREngine {
     // Headers are typically short, capitalized, and may contain key phrases
     const headerKeywords = ['welcome', 'introduction', 'overview', 'about us', 'our services'];
     const lowerText = text.toLowerCase();
-    
+
     const hasHeaderKeywords = headerKeywords.some(keyword => lowerText.includes(keyword));
     const isShortAndCapitalized = text.length < 100 && /^[A-Z]/.test(text);
     const isAllCaps = text === text.toUpperCase() && text.length > 5;
-    
+
     return hasHeaderKeywords || isShortAndCapitalized || isAllCaps;
   }
 
@@ -156,9 +156,9 @@ class OCREngine {
     const labelPatterns = [
       /.*:$/,  // Ends with colon
       /^(name|email|phone|address|city|state|zip|country)$/i,
-      /^\*.*$/,  // Starts with asterisk (required field)
+      /^\*.*$/  // Starts with asterisk (required field)
     ];
-    
+
     return labelPatterns.some(pattern => pattern.test(text.trim()));
   }
 
@@ -168,7 +168,7 @@ class OCREngine {
   isLinkText(text) {
     const urlPattern = /https?:\/\/[^\s]+/;
     const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-    
+
     return urlPattern.test(text) || emailPattern.test(text);
   }
 
@@ -180,7 +180,7 @@ class OCREngine {
       'enter', 'input', 'select', 'choose', 'required', 'optional',
       'placeholder', 'search', 'filter'
     ];
-    
+
     const lowerText = text.toLowerCase();
     return formKeywords.some(keyword => lowerText.includes(keyword));
   }
@@ -192,20 +192,20 @@ class OCREngine {
    */
   estimateFontInfo(paragraph) {
     const height = paragraph.bbox.y1 - paragraph.bbox.y0;
-    
+
     // Estimate font size based on text height
-    let fontSize = Math.round(height * 0.75); // Approximate conversion
-    
+    const fontSize = Math.round(height * 0.75); // Approximate conversion
+
     // Classify font size
     let sizeCategory = 'normal';
     if (fontSize >= 24) sizeCategory = 'large';
     else if (fontSize >= 18) sizeCategory = 'medium';
     else if (fontSize <= 12) sizeCategory = 'small';
-    
+
     return {
       estimated_size: fontSize,
       size_category: sizeCategory,
-      height: height
+      height
     };
   }
 
@@ -309,4 +309,4 @@ class OCREngine {
   }
 }
 
-module.exports = OCREngine; 
+module.exports = OCREngine;
