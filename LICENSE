@@ -1,0 +1,69 @@
+MIT License
+
+Copyright (c) 2024 img-to-text-computational contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Third-Party Licenses
+
+This project includes the following third-party software:
+
+### Tesseract.js
+- License: Apache License 2.0
+- Copyright: Tesseract.js contributors
+- Website: https://tesseract.projectnaptha.com/
+
+### Sharp
+- License: Apache License 2.0
+- Copyright: Lovell Fuller and contributors
+- Website: https://sharp.pixelplumbing.com/
+
+### OpenCV.js
+- License: BSD 3-Clause License
+- Copyright: OpenCV contributors
+- Website: https://opencv.org/
+
+### Commander.js
+- License: MIT License
+- Copyright: TJ Holowaychuk and contributors
+- Website: https://github.com/tj/commander.js
+
+### Chalk
+- License: MIT License
+- Copyright: Sindre Sorhus
+- Website: https://github.com/chalk/chalk
+
+### Ora
+- License: MIT License
+- Copyright: Sindre Sorhus
+- Website: https://github.com/sindresorhus/ora
+
+### Other Dependencies
+All other dependencies maintain their respective licenses as specified in their package.json files.
+
+## Attribution
+
+If you use this software in your project, we appreciate attribution but it's not required.
+Suggested attribution: "Powered by img-to-text-computational"
+
+## Support
+
+For questions about licensing, please contact:
+- GitHub Issues: https://github.com/yourusername/img-to-text-computational/issues
+- Email: license@img-to-text-computational.com 

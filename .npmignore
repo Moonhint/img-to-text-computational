@@ -1,0 +1,60 @@
+# Development files
+.env
+.env.local
+.env.example
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+tests/
+test/
+coverage/
+.nyc_output/
+
+# Development dependencies
+.eslintrc*
+.prettierrc*
+jest.config.*
+.babelrc*
+
+# Documentation (keep essential ones)
+AGENT.md
+IMPLEMENTATION_PLAN.md
+docs/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+dist/
+build/
+*.tgz
+
+# Examples and samples
+examples/
+samples/
+fixtures/ 
