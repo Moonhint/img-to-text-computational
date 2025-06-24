@@ -1,0 +1,30 @@
+# NPM Configuration Example
+# Copy this file to .npmrc and replace with your actual values
+# NEVER commit .npmrc with real tokens to Git!
+
+# NPM Registry Authentication
+//registry.npmjs.org/:_authToken=YOUR_NPM_TOKEN_HERE
+
+# Optional: Set default registry
+registry=https://registry.npmjs.org/
+
+# Optional: Package publishing configuration
+access=public
+
+# Optional: Save exact versions
+save-exact=true
+
+# Optional: Disable package-lock.json auto-generation
+package-lock=false
+
+# Optional: Set npm log level
+loglevel=warn
+
+# Optional: Disable update notifications
+update-notifier=false
+
+# Instructions:
+# 1. Copy this file: cp .npmrc.example .npmrc
+# 2. Get your NPM token from: https://www.npmjs.com/settings/tokens
+# 3. Replace YOUR_NPM_TOKEN_HERE with your actual token
+# 4. The .npmrc file is already in .gitignore and will not be committed 
