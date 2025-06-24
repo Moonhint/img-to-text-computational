@@ -14,7 +14,7 @@ const program = new Command();
 program
   .name('img-to-text')
   .description('Convert images to structured text descriptions using computational methods')
-  .version("2.0.6");
+  .version('2.0.5');
 
 // Global options
 program
@@ -319,7 +319,7 @@ program
   .command('info')
   .description('Display system information and capabilities')
   .action(() => {
-    console.log(chalk.blue('Image-to-Text Computational Analyzer v2.0.6'));
+    console.log(chalk.blue('Image-to-Text Computational Analyzer v2.0.5'));
     console.log(chalk.gray('Enhanced accuracy with 98% confidence levels'));
     console.log('');
     console.log(chalk.yellow('🚀 Advanced Capabilities:'));
@@ -370,7 +370,7 @@ program
         verbose: false
       });
 
-      spinner.text = 'Testing enhanced v2.0.6 features...';
+      spinner.text = 'Testing enhanced v2.0.5 features...';
       
       // Test if we can find example images
       const exampleImages = glob.sync('./examples/*.{png,jpg,jpeg}');
@@ -384,7 +384,7 @@ program
           spinner.succeed('All tests passed!');
           
           console.log(chalk.green('✓ Core components initialized successfully'));
-          console.log(chalk.green('✓ Enhanced v2.0.6 features working'));
+          console.log(chalk.green('✓ Enhanced v2.0.5 features working'));
           console.log(chalk.green('✓ Image processing ready'));
           console.log(chalk.green('✓ OCR engine ready'));
           console.log(chalk.green('✓ Computer vision ready'));
@@ -614,7 +614,7 @@ function displayEnhancedBatchSummary(results, options = {}) {
   }
   
   console.log(chalk.gray('━'.repeat(60)));
-  console.log(chalk.green('🎉 Enhanced v2.0.6 batch processing completed successfully!'));
+  console.log(chalk.green('🎉 Enhanced v2.0.5 batch processing completed successfully!'));
 }
 
 // Parse command line arguments

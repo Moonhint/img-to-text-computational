@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.0.6] - 2024-06-25
+
+### 🚀 Enhanced CLI with Workers Support
+
+#### Added
+- **Full Workers Support**: Added `--workers` option to batch command for parallel processing
+- **Directory Argument Support**: Can now use `batch ./directory/` syntax directly
+- **Enhanced Progress Tracking**: Added `--progress` flag with real-time updates
+- **Improved Performance Metrics**: Detailed throughput and timing statistics
+- **Flexible Input Methods**: Support for both `batch ./dir/` and `batch -i ./dir/` syntax
+
+#### Enhanced
+- **Batch Processing**: Completely rewritten with parallel workers support
+- **CLI Help**: Enhanced help documentation with all new options
+- **Error Handling**: Robust error handling with graceful failure recovery
+- **Performance**: Optimized chunk processing with configurable chunk sizes
+- **User Experience**: Beautiful progress indicators and summary reports
+
+#### Technical Improvements
+- Parallel image processing with configurable worker count
+- Chunk-based processing for memory efficiency
+- Real-time progress tracking and reporting
+- Enhanced error reporting with detailed stack traces
+- Improved CLI argument parsing and validation
+
+#### CLI Command Examples
+```bash
+# Enhanced batch processing with workers
+img-to-text batch ./examples/ --output-dir ./results --workers 8
+
+# With progress tracking
+img-to-text batch ./examples/ --workers 8 --progress
+
+# Flexible input syntax
+img-to-text batch -i ./images/ -o ./output/ -w 4
+```
+
+# Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
